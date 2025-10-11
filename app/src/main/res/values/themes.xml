@@ -1,0 +1,24 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="Base.Theme.BTL_QuanLyTrungTamDayThem" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!--   Primary brand color.   -->
+        <item name="colorPrimary">@color/blue_500</item>
+        <item name="colorPrimaryVariant">@color/blue_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!--   Status bar color.   -->
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!--   Customize your theme here.   -->
+    </style>
+
+    <style name="Theme.BTL_QuanLyTrungTamDayThem" parent="Base.Theme.BTL_QuanLyTrungTamDayThem" />
+
+    <style name="Base.Theme.BTL_QuanLyTrungTamDayThem.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Base.Theme.BTL_QuanLyTrungTamDayThem.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Base.Theme.BTL_QuanLyTrungTamDayThem.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+</resources>
