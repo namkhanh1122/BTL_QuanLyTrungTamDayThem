@@ -32,6 +32,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".Views.Activities.CourseDetailActivity" />
+        <activity android:name=".Views.Activities.DocumentActivity" />
+        <activity android:name=".Views.Activities.AttendanceActivity" />
+        <activity android:name=".Views.Activities.AlertsActivity" />
+        <activity android:name=".Views.Activities.GradeManagementActivity" />
     </application>
 
 </manifest>
