@@ -2,18 +2,22 @@ package com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Core.BaseFragment;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Course;
-import com.androidpro.BTL_QuanLyTrungTamDayThem.R;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.ViewModels.CourseListViewModel;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Activities.CourseDetailActivity;
-import com.androidpro.BTL_QuanLyTrungTamDayThem.databinding.FragmentCourseBinding;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Fragments.adapters.CourseAdapter;
+import com.androidpro.BTL_QuanLyTrungTamDayThem.databinding.FragmentCourseBinding;
 
 public class CourseFragment extends BaseFragment {
 
@@ -22,37 +26,41 @@ public class CourseFragment extends BaseFragment {
     private CourseAdapter adapter;
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        b = FragmentCourseBinding.inflate(inflater, container, false);
+        return b.getRoot();
     }
 
     @Override
-    public void initUI() {
-        b = FragmentCourseBinding.inflate(getLayoutInflater());
-        binding = b;
-        rootView = b.getRoot();
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        // Theo khuôn BaseFragment: tách nhỏ và gọi tuần tự
+        initViewModel();
+        initUI();
+        observeData();
+        loadEvents();
+    }
 
-        adapter = new CourseAdapter(course -> {
-            Intent i = new Intent(requireContext(), CourseDetailActivity.class);
-            i.putExtra("course_id", course.getId());
-            i.putExtra("course_name", course.getName());
-            startActivity(i);
+    // ====== Các hàm bắt buộc của BaseFragment/ViewInitializable ======
+
+    @Override
+    public void initUI() {
+        // Adapter + click
+        adapter = new CourseAdapter((Course c) -> {
+            if (c == null) return;
+            startActivity(new Intent(requireContext(), CourseDetailActivity.class)
+                    .putExtra("course_name", c.getName()));
         });
 
+        // RecyclerView
+        b.rvCourses.setLayoutManager(new LinearLayoutManager(requireContext()));
         b.rvCourses.setAdapter(adapter);
         b.rvCourses.addItemDecoration(
-                new DividerItemDecoration(requireContext(), RecyclerView.VERTICAL)
+                new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
         );
 
-        b.swipeRefresh.setOnRefreshListener(() -> {
-            // dữ liệu là LiveData nên tự cập nhật; chỉ cần tắt refresh icon
-            b.swipeRefresh.setRefreshing(false);
-        });
-
-        // Nút thêm (tuỳ sau này bạn xử lý)
-        b.fabAdd.setOnClickListener(v -> {
-            // TODO: mở dialog tạo lớp mới
-        });
+        // Pull-to-refresh
+        b.swipeRefresh.setOnRefreshListener(() -> b.swipeRefresh.setRefreshing(false));
     }
 
     @Override
@@ -61,10 +69,14 @@ public class CourseFragment extends BaseFragment {
     }
 
     @Override
-    public void loadEvents() { }
+    public void observeData() {
+        vm.getCourses().observe(getViewLifecycleOwner(), courses -> {
+            if (adapter != null) adapter.submitList(courses);
+        });
+    }
 
     @Override
-    public void observeData() {
-        vm.getCourses().observe(getViewLifecycleOwner(), adapter::submitList);
+    public void loadEvents() {
+        // Chưa có sự kiện bổ sung
     }
 }
