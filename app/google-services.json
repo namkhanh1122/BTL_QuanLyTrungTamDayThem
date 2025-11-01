@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "366719524473",
+    "project_id": "qltrungtamdaythem",
+    "storage_bucket": "qltrungtamdaythem.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:366719524473:android:c5b76c11795aa50c4cbea8",
+        "android_client_info": {
+          "package_name": "com.androidpro.BTL_QuanLyTrungTamDayThem"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3njChwNxoTwCz1BWufkle9RJSp1NWfYg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

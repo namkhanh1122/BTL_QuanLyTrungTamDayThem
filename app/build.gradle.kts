@@ -63,5 +63,6 @@ dependencies {
     implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
-}
+    implementation("androidx.work:work-runtime:2.9.1")
 
+}

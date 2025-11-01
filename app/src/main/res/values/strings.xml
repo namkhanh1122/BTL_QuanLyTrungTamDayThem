@@ -36,4 +36,8 @@
     <string name="title_notifications">Notifications</string>
 
     <string name="add">Thêm</string>
+    <string name="trang_chu">Trang chủ</string>
+    <string name="lop_hoc">Lớp học</string>
+    <string name="cai_dat">Cài đặt</string>
+
 </resources>
