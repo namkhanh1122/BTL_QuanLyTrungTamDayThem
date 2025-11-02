@@ -27,4 +27,6 @@ public interface DangKyDao {
 
     @Query("UPDATE dang_ky SET dirty = 0 WHERE id IN (:ids)")
     void markClean(List<Long> ids);
+
+    
 }

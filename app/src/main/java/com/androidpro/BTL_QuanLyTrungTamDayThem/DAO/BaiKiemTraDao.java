@@ -1,8 +1,14 @@
 package com.androidpro.BTL_QuanLyTrungTamDayThem.DAO;
 
 import androidx.lifecycle.LiveData;
-import androidx.room.*;
+import androidx.room.Dao;
+import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
+import androidx.room.Query;
+import androidx.room.Update;
+
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.BaiKiemTra;
+
 import java.util.List;
 
 @Dao
@@ -15,6 +21,9 @@ public interface BaiKiemTraDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long upsert(BaiKiemTra bkt);
+
+    @Update
+    int update(BaiKiemTra bkt);
 
     @Query("SELECT * FROM bai_kiem_tra WHERE dirty = 1")
     List<BaiKiemTra> getDirty();
