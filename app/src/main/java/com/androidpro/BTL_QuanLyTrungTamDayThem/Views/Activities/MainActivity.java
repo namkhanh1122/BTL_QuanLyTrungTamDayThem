@@ -14,6 +14,8 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+
+
 public class MainActivity extends BaseActivity {
     BottomNavigationView navView;
     ActivityMainBinding binding;

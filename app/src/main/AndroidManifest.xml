@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -10,28 +11,33 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Base.Theme.BTL_QuanLyTrungTamDayThem">
-        <activity
-            android:name=".MainActivity"
-            android:exported="false"
-            android:label="@string/title_activity_main"
-            android:theme="@style/Base.Theme.BTL_QuanLyTrungTamDayThem.NoActionBar" />
-        <activity
-            android:name=".Views.Activities.LoginActivity"
-            android:exported="false" />
+
+        <!-- MainActivity: KHÔNG lặp lại -->
         <activity
             android:name=".Views.Activities.MainActivity"
             android:exported="false"
-            android:theme="@style/Theme.BTL_QuanLyTrungTamDayThem" />
+            android:theme="@style/Base.Theme.BTL_QuanLyTrungTamDayThem.NoActionBar" />
+
+        <activity
+            android:name=".Views.Activities.LoginActivity"
+            android:exported="false" />
+
+        <!-- Splash là LAUNCHER -->
         <activity
             android:name=".Views.Activities.SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.BTL_QuanLyTrungTamDayThem">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-    </application>
 
+        <activity android:name=".Views.Activities.CourseDetailActivity" />
+        <activity android:name=".Views.Activities.DocumentActivity" />
+        <activity android:name=".Views.Activities.AttendanceActivity" />
+        <activity android:name=".Views.Activities.AlertsActivity" />
+        <activity android:name=".Views.Activities.GradeManagementActivity" />
+
+    </application>
 </manifest>
