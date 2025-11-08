@@ -6,7 +6,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Course;
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Course;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.R;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.VH> {
         this.listener = listener;
     }
 
-    public void submitList(List<Course> list){
+    public void submitList(List<Course> list) {
         data.clear();
         if (list != null) data.addAll(list);
         notifyDataSetChanged();

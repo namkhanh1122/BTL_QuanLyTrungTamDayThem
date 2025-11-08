@@ -1,6 +1,8 @@
 package com.androidpro.BTL_QuanLyTrungTamDayThem.Firebase;
 
-import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.LopHoc;
+import androidx.annotation.NonNull;
+
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Course;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -13,7 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FirebaseRepository {
-    private final DatabaseReference lophocRef;
+    private final  FirebaseDatabase database = FirebaseDatabase.getInstance("https://qltrungtamdaythem-default-rtdb.asia-southeast1.firebasedatabase.app");
+    private final DatabaseReference courseRef;
 
     public interface DataCallback<T> {
         void onSuccess(T data);
@@ -21,30 +24,34 @@ public class FirebaseRepository {
     }
 
     public FirebaseRepository() {
-        lophocRef = FirebaseDatabase.getInstance("https://qltrungtamdaythem-default-rtdb.asia-southeast1.firebasedatabase.app").getReference("LopHoc");
+        courseRef = database.getReference("Courses");
     }
 
-    public void addLopHoc(LopHoc lopHoc, DataCallback<Void> callback) {
-        lophocRef.child(String.valueOf(lopHoc.id)).setValue(lopHoc)
+    public void addCourses(Course course, DataCallback<Void> callback) {
+        String id = courseRef.push().getKey();
+
+        course.setId(id);
+
+        courseRef.child(String.valueOf(course.getId())).setValue(course)
                 .addOnSuccessListener(aVoid -> callback.onSuccess(null))
                 .addOnFailureListener(e -> callback.onError(e.getMessage()));
     }
 
-    public void getAllLopHoc(DataCallback<List<LopHoc>> callback) {
-        lophocRef.addListenerForSingleValueEvent(new ValueEventListener() {
+    public void listenCourses(DataCallback<List<Course>> callback) {
+        courseRef.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(@NotNull DataSnapshot dataSnapshot) {
-                List<LopHoc> lopHocList = new ArrayList<>();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    LopHoc lopHoc = snapshot.getValue(LopHoc.class);
-                    lopHocList.add(lopHoc);
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<Course> list = new ArrayList<>();
+                for (DataSnapshot s : snapshot.getChildren()) {
+                    Course c = s.getValue(Course.class);
+                    if (c != null) list.add(c);
                 }
-                callback.onSuccess(lopHocList);
+                callback.onSuccess(list);
             }
 
             @Override
-            public void onCancelled(@NotNull DatabaseError databaseError) {
-                callback.onError(databaseError.getMessage());
+            public void onCancelled(@NonNull DatabaseError error) {
+                callback.onError(error.getMessage());
             }
         });
     }

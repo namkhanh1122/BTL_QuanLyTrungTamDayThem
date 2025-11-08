@@ -17,6 +17,9 @@ import com.androidpro.BTL_QuanLyTrungTamDayThem.R;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.ViewModels.SettingViewModel;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Activities.LoginActivity;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.databinding.FragmentSettingsBinding;
+import com.google.firebase.auth.FirebaseAuth;
+
+import java.util.Objects;
 
 public class SettingsFragment extends BaseFragment {
     Button btnLogout;
@@ -37,6 +40,8 @@ public class SettingsFragment extends BaseFragment {
         tvEmail = rootView.findViewById(R.id.tvEmail);
         btnLogout = rootView.findViewById(R.id.btnLogout);
 
+        tvEmail.setText(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getEmail());
+        tvName.setText(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getDisplayName());
     }
 
     @Override
@@ -46,9 +51,7 @@ public class SettingsFragment extends BaseFragment {
 
     @Override
     public void loadEvents() {
-        btnLogout.setOnClickListener(v -> {
-            ((SettingViewModel)viewModel).logoutFirebase();
-        });
+        btnLogout.setOnClickListener(v -> ((SettingViewModel)viewModel).logoutFirebase());
 
     }
 
