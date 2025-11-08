@@ -1,4 +1,4 @@
-package com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Fragments.adapters;
+package com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;

@@ -2,13 +2,14 @@ package com.androidpro.BTL_QuanLyTrungTamDayThem.ViewModels;
 
 import android.app.Application;
 import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Core.BaseViewModel;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.DAO.Course.CourseRepository;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Course;
 import java.util.List;
 
-public class CourseListViewModel extends AndroidViewModel {
+public class CourseListViewModel extends BaseViewModel {
     private final CourseRepository repo;
     private final LiveData<List<Course>> courses;
 
