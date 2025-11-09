@@ -3,6 +3,9 @@ package com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.content.Context;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
@@ -55,14 +58,11 @@ public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.VH
     public void onBindViewHolder(@NonNull AttendanceAdapter.VH h, int position) {
         Attendance item = data.get(position);
 
-        // 1. Gán dữ liệu
         h.tvStudentName.setText(item.getName());
 
         h.checkboxAttendance.setOnCheckedChangeListener(null);
         h.checkboxAttendance.setChecked(item.isPresent());
 
-        // 3. Gán dữ liệu (và xóa listener cũ)
-        // (Chúng ta dùng onFocusChange thay vì TextWatcher cho đơn giản)
         if (item.getScore() > 0) {
             h.etGrade.setText(String.valueOf(item.getScore()));
         } else {
@@ -76,17 +76,44 @@ public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.VH
             }
         });
 
+        // Commit grade when IME Done is pressed
+        h.etGrade.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                if (gradeListener != null) {
+                    String newGrade = h.etGrade.getText().toString();
+                    double parsed = 0;
+                    try {
+                        parsed = Double.parseDouble(newGrade);
+                    } catch (NumberFormatException e) {
+                        parsed = 0;
+                    }
+                    item.setScore(parsed);
+                    gradeListener.onChange(item, parsed);
+                }
+                // clear focus and hide keyboard
+                v.clearFocus();
+                InputMethodManager imm = (InputMethodManager) v.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                }
+                return true;
+            }
+            return false;
+        });
+
+        // Fallback: also commit when focus is lost
         h.etGrade.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) {
                 if (gradeListener != null) {
                     String newGrade = h.etGrade.getText().toString();
-
+                    double parsed = 0;
                     try {
-                        item.setScore(Double.parseDouble(newGrade));
+                        parsed = Double.parseDouble(newGrade);
                     } catch (NumberFormatException e) {
-                        item.setScore(0);
+                        parsed = 0;
                     }
-                    gradeListener.onChange(item, Double.parseDouble(newGrade));
+                    item.setScore(parsed);
+                    gradeListener.onChange(item, parsed);
                 }
             }
         });

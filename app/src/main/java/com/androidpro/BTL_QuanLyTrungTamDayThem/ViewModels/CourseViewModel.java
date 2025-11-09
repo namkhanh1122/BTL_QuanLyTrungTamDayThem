@@ -173,7 +173,7 @@ public class CourseViewModel extends BaseViewModel {
         });
     }
 
-    public void deleteLesson(String lessonId) {
+    public void deleteLesson(String courseId, String lessonId) {
         FirebaseRepository.getInstance().deleteLesson(lessonId, new FirebaseRepository.DataCallback<>() {
             @Override
             public void onSuccess(Lesson data) {
@@ -185,4 +185,6 @@ public class CourseViewModel extends BaseViewModel {
             }
         });
     }
+
+    
 }

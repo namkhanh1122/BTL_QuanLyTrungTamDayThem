@@ -25,7 +25,6 @@ import java.util.Locale;
 
 public class AddLessonActivity extends BaseActivity {
     private ActivityAddLessonBinding binding;
-    private ScheduleStatus selectedStatus;
     private Date selectedBeginTime;
     private Date selectedEndTime;
     private MenuItem saveItem;
@@ -59,12 +58,7 @@ public class AddLessonActivity extends BaseActivity {
         Menu menu = binding.toolbar.getMenu();
         saveItem = menu.findItem(R.id.action_save);
 
-        List<String> statusNames = new ArrayList<>();
-        for (ScheduleStatus status : ScheduleStatus.values()) {
-            statusNames.add(status.toString());
-        }
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, statusNames);
-        binding.acvStatus.setAdapter(adapter);
+        // status is computed automatically from begin/end times; no manual input
     }
 
     @Override
@@ -81,9 +75,7 @@ public class AddLessonActivity extends BaseActivity {
             ((LessonViewModel)viewModel).loadLessonDetails(lessonIdToEdit);
         }
 
-        binding.acvStatus.setOnItemClickListener((parent, view, position, id) -> {
-            selectedStatus = ScheduleStatus.values()[position];
-        });
+        // no manual status selection
 
         binding.etBeginTime.setOnClickListener(v -> showDatePickerDialog(true));
         binding.etEndTime.setOnClickListener(v -> showDatePickerDialog(false));
@@ -97,14 +89,14 @@ public class AddLessonActivity extends BaseActivity {
             String content = binding.etContent.getText().toString().trim();
             String videoUrl = binding.etVideoUrl.getText().toString().trim();
 
-            Lesson newLesson = new Lesson(
-                    title,
-                    content,
-                    videoUrl,
-                    selectedBeginTime,
-                    selectedEndTime,
-                    selectedStatus
-            );
+        Lesson newLesson = new Lesson(
+            title,
+            content,
+            videoUrl,
+            selectedBeginTime,
+            selectedEndTime,
+            computeStatus(selectedBeginTime, selectedEndTime)
+        );
             if (isEditMode && currentLesson != null) {
                 // update currentLesson
                 currentLesson.setTitle(title);
@@ -112,7 +104,7 @@ public class AddLessonActivity extends BaseActivity {
                 currentLesson.setVideoUrl(videoUrl);
                 currentLesson.setBeginTime(selectedBeginTime);
                 currentLesson.setEndTime(selectedEndTime);
-                currentLesson.setStatus(selectedStatus);
+        currentLesson.setStatus(computeStatus(selectedBeginTime, selectedEndTime));
 
                 ((LessonViewModel)viewModel).updateLesson(currentLesson);
             } else {
@@ -147,10 +139,7 @@ public class AddLessonActivity extends BaseActivity {
                 binding.etEndTime.setText(dateFormat.format(lesson.getEndTime()));
             }
 
-            if (lesson.getStatus() != null) {
-                selectedStatus = lesson.getStatus();
-                binding.acvStatus.setText(lesson.getStatus().toString(), false);
-            }
+            // status is computed from times; no manual display
         });
 
     }
@@ -209,12 +198,7 @@ public class AddLessonActivity extends BaseActivity {
             binding.tilLessonTitle.setError(null);
         }
 
-        if (selectedStatus == null) {
-            binding.tilStatus.setError("Vui lòng chọn trạng thái");
-            valid = false;
-        } else {
-            binding.tilStatus.setError(null);
-        }
+        // status is derived automatically from begin/end times
 
         if (selectedBeginTime == null) {
             binding.tilBeginTime.setError("Vui lòng chọn thời gian");
@@ -235,5 +219,14 @@ public class AddLessonActivity extends BaseActivity {
             valid = false;
         }
         return valid;
+    }
+
+    private ScheduleStatus computeStatus(Date begin, Date end) {
+        Date now = new Date();
+        if (begin == null || end == null) return ScheduleStatus.Planned;
+        if (now.before(begin)) return ScheduleStatus.Planned;
+        if (!now.before(begin) && !now.after(end)) return ScheduleStatus.Active;
+        if (now.after(end)) return ScheduleStatus.Completed;
+        return ScheduleStatus.Planned;
     }
 }

@@ -78,4 +78,95 @@ public class LessonViewModel extends BaseViewModel {
             }
         });
     }
+
+    // Load attendance entries for a lesson
+    public void loadAttendanceForLesson(String lessonId) {
+        FirebaseRepository.getInstance().listenAttendanceInLesson(lessonId, new FirebaseRepository.DataCallback<>() {
+            @Override
+            public void onSuccess(List<Attendance> data) {
+                if (data != null && !data.isEmpty()) {
+                    attendanceList.postValue(data);
+                } else {
+                    // No attendance records yet for this lesson -> create default attendance entries from students in the course
+                    FirebaseRepository.getInstance().getLessonById(lessonId, new FirebaseRepository.DataCallback<>() {
+                        @Override
+                        public void onSuccess(Lesson lesson) {
+                            if (lesson == null || lesson.getCourseId() == null) {
+                                notifyMessage.postValue("Không tìm thấy thông tin khoá học để tạo danh sách điểm danh");
+                                return;
+                            }
+
+                            String courseId = lesson.getCourseId();
+                            FirebaseRepository.getInstance().listenStudentsInCourses(courseId, new FirebaseRepository.DataCallback<>() {
+                                @Override
+                                public void onSuccess(List<Student> students) {
+                                    if (students == null || students.isEmpty()) {
+                                        attendanceList.postValue(new java.util.ArrayList<>());
+                                        return;
+                                    }
+
+                                    java.util.List<Attendance> created = new java.util.ArrayList<>();
+                                    for (Student s : students) {
+                                        Attendance a = new Attendance();
+                                        a.setLessonId(lessonId);
+                                        a.setStudentId(s.getId());
+                                        a.setPresent(false);
+                                        a.setTimestamp(new java.util.Date());
+                                        a.setScore(0);
+                                        a.setName(s.getName());
+
+                                        // addAttendance will set id on the same Attendance instance
+                                        FirebaseRepository.getInstance().addAttendance(a, new FirebaseRepository.DataCallback<>() {
+                                            @Override
+                                            public void onSuccess(Attendance data) {
+                                                created.add(data);
+                                                if (created.size() == students.size()) {
+                                                    attendanceList.postValue(created);
+                                                }
+                                            }
+
+                                            @Override
+                                            public void onError(String error) {
+                                                notifyMessage.postValue("Lỗi tạo điểm danh: " + error);
+                                            }
+                                        });
+                                    }
+                                }
+
+                                @Override
+                                public void onError(String error) {
+                                    notifyMessage.postValue(error);
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            notifyMessage.postValue(error);
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                notifyMessage.postValue(error);
+            }
+        });
+    }
+
+    // Update an attendance record (present flag and/or score)
+    public void updateAttendance(Attendance attendance) {
+        FirebaseRepository.getInstance().updateAttendance(attendance, new FirebaseRepository.DataCallback<>() {
+            @Override
+            public void onSuccess(Attendance data) {
+                notifyMessage.postValue("Cập nhật điểm/danh sách điểm danh thành công");
+            }
+
+            @Override
+            public void onError(String error) {
+                notifyMessage.postValue("Lỗi: " + error);
+            }
+        });
+    }
 }

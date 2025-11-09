@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -54,6 +55,15 @@ public class CourseFragment extends BaseFragment {
         return rootView;
     }
 
+    private ScheduleStatus computeStatus(java.util.Date begin, java.util.Date end) {
+        java.util.Date now = new java.util.Date();
+        if (begin == null || end == null) return ScheduleStatus.Planned;
+        if (now.before(begin)) return ScheduleStatus.Planned;
+        if (!now.before(begin) && !now.after(end)) return ScheduleStatus.Active;
+        if (now.after(end)) return ScheduleStatus.Completed;
+        return ScheduleStatus.Planned;
+    }
+
     @Override
     public void initUI() {
 
@@ -88,11 +98,25 @@ public class CourseFragment extends BaseFragment {
                 Course course = adapter.getCourseAt(position);
 
                 if (direction == ItemTouchHelper.LEFT) {
-                    ((CourseViewModel)viewModel).deleteCourse(course.getId());
-                    Snackbar.make(fragmentBinding.rvCourses, "Đã xóa " + course.getName(), Snackbar.LENGTH_LONG)
-                            .setAction("Hoàn tác", v -> {
-                                ((CourseViewModel)viewModel).addCourse(course);
+                    // Change delete behavior: mark as Canceled instead of removing
+                    new AlertDialog.Builder(requireContext())
+                            .setTitle("Hủy khóa học")
+                            .setMessage("Bạn có muốn hủy khoá học \"" + course.getName() + "\" không?")
+                            .setPositiveButton("Đồng ý", (dialog, which) -> {
+                                // remember previous status for undo
+                                final ScheduleStatus prev = course.getStatus();
+                                course.setStatus(ScheduleStatus.Canceled);
+                                ((CourseViewModel)viewModel).updateCourse(course);
+
+                                Snackbar.make(fragmentBinding.rvCourses, "Đã hủy " + course.getName(), Snackbar.LENGTH_LONG)
+                                        .setAction("Hoàn tác", v -> {
+                                            course.setStatus(prev);
+                                            ((CourseViewModel)viewModel).updateCourse(course);
+                                        })
+                                        .show();
                             })
+                            .setNegativeButton("Hủy", (dialog, which) -> adapter.notifyItemChanged(position))
+                            .setOnCancelListener(dialog -> adapter.notifyItemChanged(position))
                             .show();
                 }
                 else if (direction == ItemTouchHelper.RIGHT) {
@@ -131,8 +155,9 @@ public class CourseFragment extends BaseFragment {
                         icon.draw(c);
 
                     } else if (dX < 0) {
+                        // use cancel icon and orange color for cancel action
                         icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_delete_24);
-                        background.setColor(Color.parseColor("#e74c3c"));
+                        background.setColor(Color.parseColor("#f39c12"));
 
                         background.setBounds(itemView.getRight() + (int) dX, itemView.getTop(), itemView.getRight(), itemView.getBottom());
                         background.draw(c);
@@ -218,15 +243,25 @@ public class CourseFragment extends BaseFragment {
         List<Course> filteredList = new ArrayList<>();
         if (position == 0) {
             for (Course c : allCourses) {
+                if (c.getStatus() == ScheduleStatus.Canceled) continue;
+                c.setStatus(computeStatus(c.getBeginTime(), c.getEndTime()));
                 if (c.getStatus() != ScheduleStatus.Completed) {
                     filteredList.add(c);
                 }
+                ((CourseViewModel)viewModel).updateCourse(c);
             }
         } else {
             for (Course c : allCourses) {
+                if (c.getStatus() == ScheduleStatus.Canceled)
+                {
+                    filteredList.add(c);
+                    continue;
+                }
+                c.setStatus(computeStatus(c.getBeginTime(), c.getEndTime()));
                 if (c.getStatus() == ScheduleStatus.Completed) {
                     filteredList.add(c);
                 }
+                ((CourseViewModel)viewModel).updateCourse(c);
             }
         }
 

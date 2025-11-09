@@ -61,19 +61,22 @@
                     android:minLines="3" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Status is computed automatically from begin/end times; hide manual input -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilStatus"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:hint="Trạng thái *">
+                android:hint="Trạng thái *"
+                android:visibility="gone">
 
                 <AutoCompleteTextView
                     android:id="@+id/acvStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="none" />
+                    android:inputType="none"
+                    android:visibility="gone" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <LinearLayout

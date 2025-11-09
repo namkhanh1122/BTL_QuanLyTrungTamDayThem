@@ -35,7 +35,6 @@ import java.util.Locale;
 
 public class AddCourseActivity extends BaseActivity {
     private ActivityAddCourseBinding binding;
-    private ScheduleStatus selectedStatus;
     private Date selectedBeginTime;
     private Date selectedEndTime;
     private MenuItem saveItem;
@@ -68,12 +67,7 @@ public class AddCourseActivity extends BaseActivity {
         Menu menu = binding.toolbar.getMenu();
         saveItem = menu.findItem(R.id.action_save);
 
-        List<String> statusNames = new ArrayList<>();
-        for (ScheduleStatus status : ScheduleStatus.values()) {
-            statusNames.add(status.toString());
-        }
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, statusNames);
-        binding.acvStatus.setAdapter(adapter);
+        // status is computed automatically from begin/end times; no manual input
 
     }
 
@@ -102,7 +96,7 @@ public class AddCourseActivity extends BaseActivity {
                 currentCourse.setDescription(description);
                 currentCourse.setBeginTime(selectedBeginTime);
                 currentCourse.setEndTime(selectedEndTime);
-                currentCourse.setStatus(selectedStatus);
+                currentCourse.setStatus(computeStatus(selectedBeginTime, selectedEndTime));
                 ((CourseViewModel)viewModel).updateCourse(currentCourse);
                 finish();
                 return true;
@@ -114,7 +108,7 @@ public class AddCourseActivity extends BaseActivity {
                     createAt,
                     selectedBeginTime,
                     selectedEndTime,
-                    selectedStatus,
+                    computeStatus(selectedBeginTime, selectedEndTime),
                     user.getUid()
             );
 
@@ -123,10 +117,7 @@ public class AddCourseActivity extends BaseActivity {
             return true;
         });
 
-        binding.acvStatus.setOnItemClickListener((parent, view, position, id) -> {
-            binding.tilStatus.setError(null);
-            selectedStatus = ScheduleStatus.values()[position];
-        });
+        // no status dropdown listener
 
         binding.etBeginTime.setOnClickListener(v -> showDatePickerDialog(true));
 
@@ -156,12 +147,18 @@ public class AddCourseActivity extends BaseActivity {
                     binding.etEndTime.setText(dateFormat.format(course.getEndTime()));
                 }
 
-                if(course.getStatus() != null) {
-                    selectedStatus = course.getStatus();
-                    binding.acvStatus.setText(course.getStatus().toString(), false);
-                }
+                // compute and display begin/end times; status is derived from times
             }
         });
+    }
+
+    private ScheduleStatus computeStatus(Date begin, Date end) {
+        Date now = new Date();
+        if (begin == null || end == null) return ScheduleStatus.Planned;
+        if (now.before(begin)) return ScheduleStatus.Planned;
+        if (!now.before(begin) && !now.after(end)) return ScheduleStatus.Active;
+        if (now.after(end)) return ScheduleStatus.Completed;
+        return ScheduleStatus.Planned;
     }
 
     private void showDatePickerDialog(boolean isBeginTime) {
@@ -207,12 +204,7 @@ public class AddCourseActivity extends BaseActivity {
         } else {
             binding.tilName.setError(null);
         }
-        if (selectedStatus == null) {
-            binding.tilStatus.setError("Vui lòng chọn trạng thái");
-            valid = false;
-        } else {
-            binding.tilStatus.setError(null);
-        }
+        // status is derived automatically from begin/end times
         if (selectedBeginTime == null) {
             binding.tilBeginTime.setError("Vui lòng chọn ngày");
             valid = false;

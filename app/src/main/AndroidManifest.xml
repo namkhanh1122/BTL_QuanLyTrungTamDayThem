@@ -21,6 +21,9 @@
             android:name=".Views.Activities.AddLessonActivity"
             android:exported="false" />
         <activity
+            android:name=".Views.Activities.AddStudentActivity"
+            android:exported="false" />
+        <activity
             android:name=".Views.Activities.LessonDetailActivity"
             android:exported="false" />
         <activity

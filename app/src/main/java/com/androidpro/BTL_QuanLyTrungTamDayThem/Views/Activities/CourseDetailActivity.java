@@ -10,6 +10,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -21,6 +22,8 @@ import com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Adapters.LessonAdapter;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.databinding.ActivityCourseDetailBinding;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.androidpro.BTL_QuanLyTrungTamDayThem.ViewModels.LessonViewModel;
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Enums.ScheduleStatus;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -30,6 +33,7 @@ public class CourseDetailActivity extends BaseActivity {
     private LessonAdapter lessonAdapter;
     private String courseId;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+    private LessonViewModel lessonViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,11 +74,30 @@ public class CourseDetailActivity extends BaseActivity {
                 com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Lesson lesson = lessonAdapter.getLessonAt(position);
 
                 if (direction == ItemTouchHelper.LEFT) {
-                    ((CourseViewModel)viewModel).deleteLesson(lesson.getId());
-                    Snackbar.make(binding.rvLessons, "Đã xóa " + lesson.getTitle(), Snackbar.LENGTH_LONG)
-                            .setAction("Hoàn tác", v -> {
-                                ((CourseViewModel)viewModel).addLesson(courseId, lesson);
+                    // Mark lesson as Canceled instead of deleting
+                    new AlertDialog.Builder(CourseDetailActivity.this)
+                            .setTitle("Hủy buổi học")
+                            .setMessage("Bạn có muốn hủy buổi học \"" + lesson.getTitle() + "\" không?")
+                            .setPositiveButton("Đồng ý", (dialog, which) -> {
+                                final ScheduleStatus prev = lesson.getStatus();
+                                lesson.setStatus(ScheduleStatus.Canceled);
+                                // persist change
+                                if (lessonViewModel != null) lessonViewModel.updateLesson(lesson);
+                                // update UI immediately
+                                lessonAdapter.notifyItemChanged(position);
+
+                                Snackbar.make(binding.rvLessons, "Đã hủy " + lesson.getTitle(), Snackbar.LENGTH_LONG)
+                                        .setAction("Hoàn tác", v -> {
+                                            lesson.setStatus(prev);
+                                            if (lessonViewModel != null) lessonViewModel.updateLesson(lesson);
+                                            lessonAdapter.notifyItemChanged(position);
+                                        })
+                                        .show();
                             })
+                            .setNegativeButton("Hủy", (dialog, which) -> {
+                                lessonAdapter.notifyItemChanged(position);
+                            })
+                            .setOnCancelListener(dialog -> lessonAdapter.notifyItemChanged(position))
                             .show();
                 }
                 else if (direction == ItemTouchHelper.RIGHT) {
@@ -114,7 +137,7 @@ public class CourseDetailActivity extends BaseActivity {
 
                     } else if (dX < 0) {
                         icon = ContextCompat.getDrawable(CourseDetailActivity.this, R.drawable.ic_delete_24);
-                        background.setColor(Color.parseColor("#e74c3c"));
+                        background.setColor(Color.parseColor("#f39c12"));
 
                         background.setBounds(itemView.getRight() + (int) dX, itemView.getTop(), itemView.getRight(), itemView.getBottom());
                         background.draw(c);
@@ -141,8 +164,7 @@ public class CourseDetailActivity extends BaseActivity {
     @Override
     public void initViewModel() {
         viewModel = new ViewModelProvider(this).get(CourseViewModel.class);
-
-
+        lessonViewModel = new ViewModelProvider(this).get(LessonViewModel.class);
     }
 
     @Override
@@ -160,7 +182,9 @@ public class CourseDetailActivity extends BaseActivity {
         });
 
         binding.tvManageStudentsLink.setOnClickListener(v -> {
-
+            Intent intent = new Intent(this, StudentManagementActivity.class);
+            intent.putExtra("course_id", courseId);
+            startActivity(intent);
         });
     }
 

@@ -6,6 +6,8 @@ import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Attendance;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Course;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Lesson;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Student;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -85,7 +87,6 @@ public class FirebaseRepository {
             }
         });
     }
-
     public void listenCourses(DataCallback<List<Course>> callback) {
         courseRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -152,9 +153,59 @@ public class FirebaseRepository {
     }
 
     public void deleteStudent(String studentId, DataCallback<Student> callback) {
-        studentRef.child(studentId).removeValue()
-                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
-                .addOnFailureListener(e -> callback.onError(e.getMessage()));
+        // First remove any attendance records that belong to this student, then remove the student
+        attendanceRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<String> attendanceIds = new ArrayList<>();
+                for (DataSnapshot s : snapshot.getChildren()) {
+                    Attendance at = s.getValue(Attendance.class);
+                    if (at != null && studentId.equals(at.getStudentId())) {
+                        // use the node key (s.getKey()) which should equal at.getId() when created
+                        String key = s.getKey();
+                        if (key != null) attendanceIds.add(key);
+                    }
+                }
+
+                if (attendanceIds.isEmpty()) {
+                    // No attendances to remove, delete student directly
+                    studentRef.child(studentId).removeValue()
+                            .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                            .addOnFailureListener(e -> callback.onError(e.getMessage()));
+                    return;
+                }
+
+                final java.util.concurrent.atomic.AtomicInteger remaining = new java.util.concurrent.atomic.AtomicInteger(attendanceIds.size());
+                final java.util.concurrent.atomic.AtomicInteger failed = new java.util.concurrent.atomic.AtomicInteger(0);
+
+                for (String aid : attendanceIds) {
+                    attendanceRef.child(aid).removeValue()
+                            .addOnSuccessListener(aVoid -> {
+                                if (remaining.decrementAndGet() == 0) {
+                                    if (failed.get() == 0) {
+                                        // all attendance removed -> remove student
+                                        studentRef.child(studentId).removeValue()
+                                                .addOnSuccessListener(aVoid2 -> callback.onSuccess(null))
+                                                .addOnFailureListener(e -> callback.onError(e.getMessage()));
+                                    } else {
+                                        callback.onError("Failed to remove some attendance records");
+                                    }
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                failed.incrementAndGet();
+                                if (remaining.decrementAndGet() == 0) {
+                                    callback.onError("Failed to remove some attendance records: " + e.getMessage());
+                                }
+                            });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                callback.onError(error.getMessage());
+            }
+        });
     }
 
     public void listenStudentsInCourses(String courseId, DataCallback<List<Student>> callback) {
@@ -230,6 +281,28 @@ public class FirebaseRepository {
         });
     }
 
+    public void listenLessonsRealtime(DataCallback<List<Lesson>> callback) {
+        lessonRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<Lesson> lessons = new ArrayList<>();
+                for (DataSnapshot s : snapshot.getChildren()) {
+                    Lesson lesson = s.getValue(Lesson.class);
+                    if (lesson != null)
+                    {
+                        lessons.add(lesson);
+                    }
+                }
+                callback.onSuccess(lessons);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                callback.onError(error.getMessage());
+            }
+        });
+    }
+
     public void listenLessonsInCourse(String courseId, DataCallback<List<Lesson>> callback) {
         lessonRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -285,5 +358,37 @@ public class FirebaseRepository {
                 callback.onError(error.getMessage());
             }
         });
+    }
+
+    public void getAttendancesByStudentId(String studentId, DataCallback<List<Attendance>> callback) {
+        attendanceRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<Attendance> attendances = new ArrayList<>();
+                for (DataSnapshot s : snapshot.getChildren()) {
+                    Attendance attendance = s.getValue(Attendance.class);
+                    if (attendance != null && studentId != null && studentId.equals(attendance.getStudentId())) {
+                        attendances.add(attendance);
+                    }
+                }
+                callback.onSuccess(attendances);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                callback.onError(error.getMessage());
+            }
+        });
+    }
+
+    public void updateAttendance(Attendance attendance, DataCallback<Attendance> callback) {
+        if (attendance == null || attendance.getId() == null) {
+            callback.onError("Invalid attendance data");
+            return;
+        }
+
+        attendanceRef.child(attendance.getId()).setValue(attendance)
+                .addOnSuccessListener(aVoid -> callback.onSuccess(attendance))
+                .addOnFailureListener(e -> callback.onError(e.getMessage()));
     }
 }

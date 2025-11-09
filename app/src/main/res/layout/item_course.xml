@@ -78,6 +78,19 @@
         </LinearLayout>
 
         <!-- Icon next -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/tvStatusBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textSize="12sp"
+            android:text="Sắp"
+            app:chipMinHeight="28dp"
+            app:chipCornerRadius="16dp"
+            app:chipIconVisible="false"
+            app:checkedIconVisible="false"
+            />
+
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"

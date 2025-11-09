@@ -4,12 +4,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Lesson;
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Enums.ScheduleStatus;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.R;
+import com.google.android.material.chip.Chip;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -77,6 +81,41 @@ public class LessonAdapter extends RecyclerView.Adapter<LessonAdapter.VH> {
         h.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onClick(l);
         });
+
+        // bind status badge
+        try {
+            if (h.tvStatusBadge != null) {
+                String label = "Sắp";
+                int bg = Color.parseColor("#BDBDBD");
+                int textColor = Color.BLACK;
+                if (l.getStatus() != null) {
+                    switch (l.getStatus()) {
+                        case Active:
+                            label = "Đang";
+                            bg = Color.parseColor("#4CAF50");
+                            textColor = Color.WHITE;
+                            break;
+                        case Completed:
+                            label = "Hoàn thành";
+                            bg = Color.parseColor("#2196F3");
+                            textColor = Color.WHITE;
+                            break;
+                        case Canceled:
+                            label = "Đã hủy";
+                            bg = Color.parseColor("#E57373");
+                            textColor = Color.WHITE;
+                            break;
+                        default:
+                            label = "Sắp";
+                            bg = Color.parseColor("#BDBDBD");
+                            textColor = Color.BLACK;
+                    }
+                }
+                h.tvStatusBadge.setText(label);
+                h.tvStatusBadge.setChipBackgroundColor(ColorStateList.valueOf(bg));
+                h.tvStatusBadge.setTextColor(textColor);
+            }
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -84,11 +123,13 @@ public class LessonAdapter extends RecyclerView.Adapter<LessonAdapter.VH> {
 
     static class VH extends RecyclerView.ViewHolder {
         TextView tvLessonTitle, tvLessonTime, tvLessonDay;
+        Chip tvStatusBadge;
         VH(@NonNull View itemView) {
             super(itemView);
             tvLessonTitle = itemView.findViewById(R.id.tvLessonTitle);
             tvLessonTime = itemView.findViewById(R.id.tvLessonTime);
             tvLessonDay = itemView.findViewById(R.id.tvLessonDay);
+            tvStatusBadge = itemView.findViewById(R.id.tvStatusBadge);
         }
     }
 }

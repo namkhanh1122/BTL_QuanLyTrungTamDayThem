@@ -52,5 +52,18 @@
             android:layout_marginStart="8dp"
             tools:text="07:00 21-07-2025" />
 
+        <com.google.android.material.chip.Chip
+            android:id="@+id/tvStatusBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textSize="12sp"
+            android:text="Sắp"
+            app:chipMinHeight="28dp"
+            app:chipCornerRadius="16dp"
+            app:chipIconVisible="false"
+            app:checkedIconVisible="false"
+            />
+
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

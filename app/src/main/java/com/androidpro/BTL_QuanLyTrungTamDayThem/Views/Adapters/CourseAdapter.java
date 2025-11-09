@@ -4,13 +4,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
-import android.widget.TextView;
+import com.google.android.material.chip.Chip;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Course;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.R;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.mUtils;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.widget.TextView;
+
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.text.SimpleDateFormat;
@@ -62,6 +66,42 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.VH> {
 
         }
 
+        // Status badge - show the stored status name (fallback to Planned)
+        // Set Vietnamese labels and colors for status
+        try {
+            if (h.tvStatusBadge != null) {
+                String label = "Sắp";
+                int bg = Color.parseColor("#BDBDBD");
+                int textColor = Color.BLACK;
+                if (c.getStatus() != null) {
+                    switch (c.getStatus()) {
+                        case Active:
+                            label = "Đang";
+                            bg = Color.parseColor("#4CAF50");
+                            textColor = Color.WHITE;
+                            break;
+                        case Completed:
+                            label = "Hoàn thành";
+                            bg = Color.parseColor("#2196F3");
+                            textColor = Color.WHITE;
+                            break;
+                        case Canceled:
+                            label = "Đã hủy";
+                            bg = Color.parseColor("#E57373");
+                            textColor = Color.WHITE;
+                            break;
+                        default:
+                            label = "Sắp";
+                            bg = Color.parseColor("#BDBDBD");
+                            textColor = Color.BLACK;
+                    }
+                }
+                h.tvStatusBadge.setText(label);
+                h.tvStatusBadge.setChipBackgroundColor(ColorStateList.valueOf(bg));
+                h.tvStatusBadge.setTextColor(textColor);
+            }
+        } catch (Exception ignored) {}
+
 
         h.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onClick(c);
@@ -77,12 +117,14 @@ public class CourseAdapter extends RecyclerView.Adapter<CourseAdapter.VH> {
 
     static class VH extends RecyclerView.ViewHolder {
         TextView tvName, tvTime;
+        Chip tvStatusBadge;
         ProgressBar progressBar;
         VH(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvCourseName);
             tvTime = itemView.findViewById(R.id.tvTime);
             progressBar = itemView.findViewById(R.id.progressBar);
+            tvStatusBadge = itemView.findViewById(R.id.tvStatusBadge);
         }
     }
 }

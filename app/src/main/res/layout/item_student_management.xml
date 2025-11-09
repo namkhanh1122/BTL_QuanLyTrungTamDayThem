@@ -70,7 +70,7 @@
                     android:id="@+id/tvAverageGrade"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="?android:attr/textColorPrimary"
@@ -98,7 +98,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Chuyên cần"
+                        android:text="Số buổi học"
                         android:textSize="12sp"
                         android:layout_marginStart="4dp"
                         android:textColor="?android:attr/textColorSecondary" />
@@ -108,7 +108,7 @@
                     android:id="@+id/tvAttendanceRatio"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="?android:attr/textColorPrimary"

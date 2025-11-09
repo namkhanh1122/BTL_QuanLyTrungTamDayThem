@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Core.BaseActivity;
-import com.androidpro.BTL_QuanLyTrungTamDayThem.ViewModels.CourseViewModel;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.ViewModels.LessonViewModel;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Adapters.AttendanceAdapter;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.databinding.ActivityLessonDetailBinding;
@@ -42,7 +41,17 @@ public class LessonDetailActivity extends BaseActivity {
         }
 
         attendanceAdapter = new AttendanceAdapter((attendance, isChecked) -> {
+            // Update attendance present flag and persist
+            attendance.setPresent(isChecked);
+            if (viewModel instanceof LessonViewModel) {
+                ((LessonViewModel) viewModel).updateAttendance(attendance);
+            }
         }, (attendance, score) -> {
+            // Update attendance score and persist
+            attendance.setScore(score);
+            if (viewModel instanceof LessonViewModel) {
+                ((LessonViewModel) viewModel).updateAttendance(attendance);
+            }
         });
 
         binding.rvStudentAttendance.setLayoutManager(new LinearLayoutManager(this));
@@ -60,7 +69,8 @@ public class LessonDetailActivity extends BaseActivity {
         binding.toolbar.setNavigationOnClickListener(v -> finish());
 
         ((LessonViewModel)viewModel).loadLessonDetails(lessonId);
-
+        // Load attendance records for this lesson
+        ((LessonViewModel)viewModel).loadAttendanceForLesson(lessonId);
     }
 
     @Override
@@ -79,6 +89,13 @@ public class LessonDetailActivity extends BaseActivity {
                 if(lesson.getEndTime() != null) {
                     binding.tvEndTime.setText(dateFormat.format(lesson.getEndTime()));
                 }
+            }
+        });
+
+        // Observe attendance list and submit to adapter
+        ((LessonViewModel)viewModel).attendanceList.observe(this, attendances -> {
+            if (attendances != null) {
+                attendanceAdapter.submitList(attendances);
             }
         });
     }
