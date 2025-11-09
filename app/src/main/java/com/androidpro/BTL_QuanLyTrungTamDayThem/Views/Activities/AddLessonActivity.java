@@ -11,14 +11,10 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Core.BaseActivity;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Enums.ScheduleStatus;
-import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Course;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Lesson;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.R;
-import com.androidpro.BTL_QuanLyTrungTamDayThem.ViewModels.CourseViewModel;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.ViewModels.LessonViewModel;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.databinding.ActivityAddLessonBinding;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -35,6 +31,9 @@ public class AddLessonActivity extends BaseActivity {
     private MenuItem saveItem;
 
     private String courseId;
+    private boolean isEditMode = false;
+    private Lesson currentLesson = null;
+    private String lessonIdToEdit = null;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
 
     @Override
@@ -48,6 +47,14 @@ public class AddLessonActivity extends BaseActivity {
         setContentView(binding.getRoot());
 
         courseId = getIntent().getStringExtra("course_id");
+        lessonIdToEdit = getIntent().getStringExtra("lesson_id_to_edit");
+        isEditMode = (lessonIdToEdit != null);
+
+        if (isEditMode) {
+            binding.toolbar.setTitle("Sửa buổi học");
+        } else {
+            binding.toolbar.setTitle("Thêm buổi học mới");
+        }
 
         Menu menu = binding.toolbar.getMenu();
         saveItem = menu.findItem(R.id.action_save);
@@ -69,6 +76,10 @@ public class AddLessonActivity extends BaseActivity {
     public void loadEvents() {
         binding.toolbar.setNavigationOnClickListener(v -> finish());
         ((LessonViewModel)viewModel).loadLessonsInCourseRealtime(courseId);
+
+        if (isEditMode) {
+            ((LessonViewModel)viewModel).loadLessonDetails(lessonIdToEdit);
+        }
 
         binding.acvStatus.setOnItemClickListener((parent, view, position, id) -> {
             selectedStatus = ScheduleStatus.values()[position];
@@ -94,8 +105,19 @@ public class AddLessonActivity extends BaseActivity {
                     selectedEndTime,
                     selectedStatus
             );
+            if (isEditMode && currentLesson != null) {
+                // update currentLesson
+                currentLesson.setTitle(title);
+                currentLesson.setContent(content);
+                currentLesson.setVideoUrl(videoUrl);
+                currentLesson.setBeginTime(selectedBeginTime);
+                currentLesson.setEndTime(selectedEndTime);
+                currentLesson.setStatus(selectedStatus);
 
-            ((LessonViewModel)viewModel).addLesson(courseId, newLesson);
+                ((LessonViewModel)viewModel).updateLesson(currentLesson);
+            } else {
+                ((LessonViewModel)viewModel).addLesson(courseId, newLesson);
+            }
 
             finish();
             return true;
@@ -106,6 +128,30 @@ public class AddLessonActivity extends BaseActivity {
     @Override
     public void observeData() {
         super.observeData();
+
+        ((LessonViewModel)viewModel).lessonDetail.observe(this, lesson -> {
+            if (lesson == null) return;
+            currentLesson = lesson;
+
+            binding.etLessonTitle.setText(lesson.getTitle());
+            binding.etContent.setText(lesson.getContent());
+            binding.etVideoUrl.setText(lesson.getVideoUrl());
+
+            if (lesson.getBeginTime() != null) {
+                selectedBeginTime = lesson.getBeginTime();
+                binding.etBeginTime.setText(dateFormat.format(lesson.getBeginTime()));
+            }
+
+            if (lesson.getEndTime() != null) {
+                selectedEndTime = lesson.getEndTime();
+                binding.etEndTime.setText(dateFormat.format(lesson.getEndTime()));
+            }
+
+            if (lesson.getStatus() != null) {
+                selectedStatus = lesson.getStatus();
+                binding.acvStatus.setText(lesson.getStatus().toString(), false);
+            }
+        });
 
     }
 

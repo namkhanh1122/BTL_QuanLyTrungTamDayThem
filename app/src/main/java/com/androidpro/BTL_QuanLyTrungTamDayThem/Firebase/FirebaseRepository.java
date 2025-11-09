@@ -140,8 +140,25 @@ public class FirebaseRepository {
         });
     }
 
+    public void updateStudent(Student student, DataCallback<Student> callback) {
+        if (student == null || student.getId() == null) {
+            callback.onError("Invalid student");
+            return;
+        }
+
+        studentRef.child(student.getId()).setValue(student)
+                .addOnSuccessListener(aVoid -> callback.onSuccess(student))
+                .addOnFailureListener(e -> callback.onError(e.getMessage()));
+    }
+
+    public void deleteStudent(String studentId, DataCallback<Student> callback) {
+        studentRef.child(studentId).removeValue()
+                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                .addOnFailureListener(e -> callback.onError(e.getMessage()));
+    }
+
     public void listenStudentsInCourses(String courseId, DataCallback<List<Student>> callback) {
-        studentRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        studentRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 List<Student> students = new ArrayList<>();
@@ -179,6 +196,23 @@ public class FirebaseRepository {
                 .addOnFailureListener(e -> callback.onError(e.getMessage()));
     }
 
+    public void updateLesson(Lesson lesson, DataCallback<Lesson> callback) {
+        if (lesson == null || lesson.getId() == null) {
+            callback.onError("Invalid lesson");
+            return;
+        }
+
+        lessonRef.child(lesson.getId()).setValue(lesson)
+                .addOnSuccessListener(aVoid -> callback.onSuccess(lesson))
+                .addOnFailureListener(e -> callback.onError(e.getMessage()));
+    }
+
+    public void deleteLesson(String lessonId, DataCallback<Lesson> callback) {
+        lessonRef.child(lessonId).removeValue()
+                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                .addOnFailureListener(e -> callback.onError(e.getMessage()));
+    }
+
 
     public void getLessonById(String lessonId, DataCallback<Lesson> callback) {
         lessonRef.child(lessonId).get().addOnCompleteListener(task -> {
@@ -197,7 +231,7 @@ public class FirebaseRepository {
     }
 
     public void listenLessonsInCourse(String courseId, DataCallback<List<Lesson>> callback) {
-        lessonRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        lessonRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 List<Lesson> lessons = new ArrayList<>();

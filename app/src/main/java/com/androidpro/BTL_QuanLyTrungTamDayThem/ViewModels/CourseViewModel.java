@@ -39,6 +39,19 @@ public class CourseViewModel extends BaseViewModel {
         });
     }
 
+    public void addLesson(String courseId, Lesson lesson) {
+        FirebaseRepository.getInstance().addLessonToCourse( courseId, lesson, new FirebaseRepository.DataCallback<>() {
+            @Override
+            public void onSuccess(Lesson data) {
+                notifyMessage.postValue("Thêm buổi học thành công");
+            }
+            @Override
+            public void onError(String error) {
+                notifyMessage.postValue("Lỗi: " + error);
+            }
+        });
+    }
+
     public void loadLessonsForCourse(String courseId) {
         FirebaseRepository.getInstance().listenLessonsInCourse(courseId, new FirebaseRepository.DataCallback<>() {
             @Override
@@ -61,6 +74,48 @@ public class CourseViewModel extends BaseViewModel {
             @Override
             public void onError(String error) {
                 notifyMessage.postValue(error);
+            }
+        });
+    }
+
+    public void addStudent(String courseId, Student student) {
+        FirebaseRepository.getInstance().addStudentToCourse(courseId, student, new FirebaseRepository.DataCallback<>() {
+            @Override
+            public void onSuccess(Student data) {
+                notifyMessage.postValue("Thêm học viên thành công");
+            }
+
+            @Override
+            public void onError(String error) {
+                notifyMessage.postValue("Lỗi: " + error);
+            }
+        });
+    }
+
+    public void updateStudent(Student student) {
+        FirebaseRepository.getInstance().updateStudent(student, new FirebaseRepository.DataCallback<>() {
+            @Override
+            public void onSuccess(Student data) {
+                notifyMessage.postValue("Cập nhật học viên thành công");
+            }
+
+            @Override
+            public void onError(String error) {
+                notifyMessage.postValue("Lỗi: " + error);
+            }
+        });
+    }
+
+    public void deleteStudent(String studentId) {
+        FirebaseRepository.getInstance().deleteStudent(studentId, new FirebaseRepository.DataCallback<>() {
+            @Override
+            public void onSuccess(Student data) {
+                // no-op
+            }
+
+            @Override
+            public void onError(String error) {
+                notifyMessage.postValue("Lỗi: " + error);
             }
         });
     }
@@ -111,6 +166,19 @@ public class CourseViewModel extends BaseViewModel {
             public void onSuccess(Course data) {
                 notifyMessage.postValue("Cập nhật khóa học thành công");
             }
+            @Override
+            public void onError(String error) {
+                notifyMessage.postValue("Lỗi: " + error);
+            }
+        });
+    }
+
+    public void deleteLesson(String lessonId) {
+        FirebaseRepository.getInstance().deleteLesson(lessonId, new FirebaseRepository.DataCallback<>() {
+            @Override
+            public void onSuccess(Lesson data) {
+            }
+
             @Override
             public void onError(String error) {
                 notifyMessage.postValue("Lỗi: " + error);

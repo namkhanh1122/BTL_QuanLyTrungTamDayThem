@@ -36,6 +36,10 @@ public class LessonAdapter extends RecyclerView.Adapter<LessonAdapter.VH> {
         notifyDataSetChanged();
     }
 
+    public Lesson getLessonAt(int position) {
+        return data.get(position);
+    }
+
     @NonNull
     @Override
     public LessonAdapter.VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

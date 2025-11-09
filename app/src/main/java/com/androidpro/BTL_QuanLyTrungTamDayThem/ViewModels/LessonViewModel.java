@@ -57,8 +57,21 @@ public class LessonViewModel extends BaseViewModel {
             @Override
             public void onSuccess(Lesson data) {
                 notifyMessage.postValue("Thêm buổi học thành công");
-                loadLessonsInCourseRealtime(courseId);
             }
+            @Override
+            public void onError(String error) {
+                notifyMessage.postValue("Lỗi: " + error);
+            }
+        });
+    }
+
+    public void updateLesson(Lesson lesson) {
+        FirebaseRepository.getInstance().updateLesson(lesson, new FirebaseRepository.DataCallback<>() {
+            @Override
+            public void onSuccess(Lesson data) {
+                notifyMessage.postValue("Cập nhật buổi học thành công");
+            }
+
             @Override
             public void onError(String error) {
                 notifyMessage.postValue("Lỗi: " + error);

@@ -132,7 +132,8 @@ public class AddCourseActivity extends BaseActivity {
 
         binding.etEndTime.setOnClickListener(v -> showDatePickerDialog(false));
 
-        ((CourseViewModel)viewModel).loadCourseDetails(courseId);
+        if (isEditMode)
+            ((CourseViewModel)viewModel).loadCourseDetails(courseId);
     }
 
     @Override
