@@ -1,11 +1,17 @@
 package com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Activities;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.androidpro.BTL_QuanLyTrungTamDayThem.R;
 import com.google.firebase.auth.FirebaseAuth;
@@ -18,6 +24,12 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions((Activity) getApplicationContext(), new String[] {Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
 
         handler.postDelayed(new Runnable() {
             @Override
@@ -36,7 +48,7 @@ public class SplashActivity extends AppCompatActivity {
                 }
                 finish();
             }
-        }, 3000);
+        }, 2000);
     }
 
 }

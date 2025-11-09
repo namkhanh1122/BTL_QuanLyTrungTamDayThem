@@ -1,5 +1,11 @@
 package com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase;
 
+import androidx.room.Entity;
+import androidx.room.Ignore;
+import androidx.room.TypeConverter;
+import androidx.room.TypeConverters;
+
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Converters.DateConverter;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Core.BaseEntity;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Enums.ScheduleStatus;
 
@@ -7,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@Entity(tableName = "courses")
+@TypeConverters(DateConverter.class)
 public class Course extends BaseEntity {
 
     private String description;
@@ -20,8 +28,6 @@ public class Course extends BaseEntity {
     private ScheduleStatus status;
 
     private String instructorId;
-
-    private List<String> studentIds = new ArrayList<>();
 
     public Course() {
 
@@ -85,13 +91,4 @@ public class Course extends BaseEntity {
         this.instructorId = instructorId;
     }
 
-    public List<String> getStudentIds() { return studentIds; }
-
-    public void addStudentId(String studentId) {
-        studentIds.add(studentId);
-    }
-
-    public void removeStudentId(String studentId) {
-        studentIds.remove(studentId);
-    }
 }

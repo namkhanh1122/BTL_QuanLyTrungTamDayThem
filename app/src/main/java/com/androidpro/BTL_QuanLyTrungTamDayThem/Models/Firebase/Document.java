@@ -1,7 +1,10 @@
 package com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase;
 
+import androidx.room.Entity;
+
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Core.BaseEntity;
 
+@Entity(tableName = "documents")
 public class Document extends BaseEntity {
     private String title;
 

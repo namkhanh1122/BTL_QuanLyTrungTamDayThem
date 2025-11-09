@@ -6,6 +6,8 @@ import androidx.room.PrimaryKey;
 import java.util.Date;
 
 public abstract class BaseEntity {
+    @PrimaryKey
+    @NonNull
     protected String id;
 
     protected String name;

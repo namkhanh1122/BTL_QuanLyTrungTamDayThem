@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".Views.Activities.CourseDetailActivity">
+    tools:context=".Views.Activities.LessonDetailActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
@@ -18,7 +18,8 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_arrow_back_24"
-            app:title="Chi tiết khoá học"/>
+            app:title="Chi tiết buổi học"
+            app:menu="@menu/lesson_detail_menu"/>
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -29,8 +30,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -47,19 +48,19 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Tên lớp"
+                        android:text="Tiêu đề buổi học"
                         android:textSize="12sp"
                         android:textColor="?android:attr/textColorSecondary" />
 
                     <TextView
-                        android:id="@+id/tvCourseName"
+                        android:id="@+id/tvLessonTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="?android:attr/textColorPrimary"
-                        tools:text="Khoá học Toán Nâng Cao" />
+                        tools:text="Buổi 1: Giới thiệu Đại số" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -72,14 +73,12 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical">
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Bắt đầu"
                                 android:textSize="12sp"
                                 android:textColor="?android:attr/textColorSecondary" />
-
                             <TextView
                                 android:id="@+id/tvBeginTime"
                                 android:layout_width="wrap_content"
@@ -87,7 +86,7 @@
                                 android:layout_marginTop="4dp"
                                 android:textSize="16sp"
                                 android:textColor="?android:attr/textColorPrimary"
-                                tools:text="10/11/2025" />
+                                tools:text="08:00 20/10/2025" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -96,14 +95,12 @@
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:layout_marginStart="8dp">
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Kết thúc"
                                 android:textSize="12sp"
                                 android:textColor="?android:attr/textColorSecondary" />
-
                             <TextView
                                 android:id="@+id/tvEndTime"
                                 android:layout_width="wrap_content"
@@ -111,11 +108,12 @@
                                 android:layout_marginTop="4dp"
                                 android:textSize="16sp"
                                 android:textColor="?android:attr/textColorPrimary"
-                                tools:text="10/05/2026" />
+                                tools:text="09:30 20/10/2025" />
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -128,54 +126,84 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="16dp">
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Học viên"
-                            android:textSize="12sp"
-                            android:textColor="?android:attr/textColorSecondary"
-                            android:layout_alignParentStart="true"
-                            android:layout_centerVertical="true"/>
-
-                        <TextView
-                            android:id="@+id/tvManageStudentsLink"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Quản lý"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="?attr/colorPrimary"
-                            android:layout_alignParentEnd="true"
-                            android:layout_centerVertical="true"
-                            android:padding="4dp"
-                            android:background="?attr/selectableItemBackground"
-                            android:clickable="true"
-                            android:focusable="true"/>
-                    </RelativeLayout>
-
                     <TextView
-                        android:id="@+id/tvStudents"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Nội dung"
+                        android:textSize="12sp"
+                        android:textColor="?android:attr/textColorSecondary" />
+                    <TextView
+                        android:id="@+id/tvContent"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:textSize="16sp"
                         android:textColor="?android:attr/textColorPrimary"
-                        tools:text="32" />
+                        tools:text="Giới thiệu các khái niệm cơ bản về biến số, hằng số và biểu thức đại số." />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
 
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardLessons"
-                android:layout_width="match_parent"
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
+                android:text="Quản lý"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorPrimary" />
+
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardDocuments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <ImageView
+                        android:id="@+id/iconDocuments"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_folder_24"
+                        app:tint="?attr/colorPrimary"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="16dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/iconDocuments"
+                        android:text="Tài liệu buổi học"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_centerVertical="true"/>
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_chevron_right_24"
+                        app:tint="?android:attr/textColorSecondary"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"/>
+                </RelativeLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardStudentList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 app:cardCornerRadius="16dp">
 
                 <LinearLayout
@@ -184,48 +212,58 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Danh sách buổi học"
-                            android:textStyle="bold"
-                            android:textSize="16sp"
-                            android:layout_alignParentStart="true"
-                            android:layout_centerVertical="true"/>
-
-                        <TextView
-                            android:id="@+id/tvAddLessonLink"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Thêm"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="?attr/colorPrimary"
-                            android:layout_alignParentEnd="true"
-                            android:layout_centerVertical="true"
-                            android:padding="4dp"
-                            android:background="?attr/selectableItemBackground"
-                            android:clickable="true"
-                            android:focusable="true"/>
-                    </RelativeLayout>
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvLessons"
+                    <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:text="Điểm danh và Cho điểm"
+                        android:textStyle="bold"
+                        android:textSize="16sp" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="8dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Họ và tên"
+                            android:textStyle="bold"
+                            android:textSize="12sp"/>
+
+                        <TextView
+                            android:layout_width="80dp"
+                            android:layout_height="wrap_content"
+                            android:text="Điểm"
+                            android:gravity="center"
+                            android:layout_marginStart="8dp"
+                            android:textStyle="bold"
+                            android:textSize="12sp"/>
+
+                        <TextView
+                            android:layout_width="80dp"
+                            android:layout_height="wrap_content"
+                            android:text="Có mặt?"
+                            android:gravity="center_horizontal"
+                            android:layout_marginStart="8dp"
+                            android:textStyle="bold"
+                            android:textSize="12sp"/>
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvStudentAttendance"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                        tools:listitem="@layout/item_lesson_chip"
-                        tools:itemCount="3"/>
+                        tools:listitem="@layout/item_student_attendance"
+                        tools:itemCount="5"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-
         </LinearLayout>
-
     </androidx.core.widget.NestedScrollView>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
