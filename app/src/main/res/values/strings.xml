@@ -39,5 +39,14 @@
     <string name="trang_chu">Trang chủ</string>
     <string name="lop_hoc">Lớp học</string>
     <string name="cai_dat">Cài đặt</string>
+    <string name="name_course">Tên khóa học</string>
+    <string name="course_name">Tên khóa học</string>
+    <string name="description">Mô tả</string>
+    <string name="time_start_end">Thời gian bắt đầu - kết thúc</string>
+    <string name="status">Trạng thái</string>
+    <string name="students">Sinh viên tham gia</string>
+    <string name="tien_do_hoc">Tiến độ học</string>
+    <string name="instructor">Giảng viên:</string>
+    <string name="search">Tìm kiếm</string>
 
 </resources>

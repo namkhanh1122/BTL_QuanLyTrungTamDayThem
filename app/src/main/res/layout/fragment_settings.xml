@@ -184,13 +184,14 @@
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnLogout"
         app:backgroundTint="@color/red_50"
         android:textColor="@color/red_500"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:text="@string/logout"
         android:layout_marginHorizontal="10dp"
-        android:layout_marginBottom="30dp"
+        android:layout_marginBottom="80dp"
         app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

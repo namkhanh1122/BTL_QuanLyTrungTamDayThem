@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <TextView
+        android:id="@+id/tvStudentName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="14sp"
+        android:textColor="?android:attr/textColorPrimary"
+        tools:text="Nguyễn Ngọc Trâm Anh" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilGrade"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+        android:layout_width="80dp"  android:layout_height="wrap_content"
+        android:layout_marginStart="8dp" android:hint="Điểm">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etGrade"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:maxLength="4"
+            android:gravity="center"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <CheckBox
+        android:id="@+id/checkboxAttendance"
+        android:layout_width="80dp" android:layout_height="wrap_content"
+        android:gravity="center_horizontal" android:layout_marginStart="8dp"/>
+</LinearLayout>

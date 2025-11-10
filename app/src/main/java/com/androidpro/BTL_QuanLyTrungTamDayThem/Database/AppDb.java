@@ -7,8 +7,10 @@ import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
+import androidx.room.TypeConverters;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Converters.DateConverter;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.DAO.*;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.*;
 
@@ -18,7 +20,7 @@ import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.*;
                 LichDay.class, DiemDanh.class, ThongBao.class, TaiLieu.class,
                 BaiKiemTra.class, Diem.class
         },
-        version = 1, // nếu muốn reset DB không cần uninstall, tăng lên 2
+        version = 1,
         exportSchema = true
 )
 public abstract class AppDb extends RoomDatabase {

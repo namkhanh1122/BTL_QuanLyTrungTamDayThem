@@ -7,33 +7,67 @@
     android:layout_height="match_parent"
     tools:context=".Views.Fragments.CourseFragment">
 
-    <!-- Kéo để refresh danh sách lớp -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            app:titleTextColor="?attr/colorOnBackground"
+            android:layout_height="?attr/actionBarSize"
+            app:title="Danh sách lớp"
+            app:menu="@menu/course_list_menu" />
+
+            <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:tabGravity="fill"
+            app:tabMode="fixed">
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Đang diễn ra" />
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Đã kết thúc" />
+
+    </com.google.android.material.tabs.TabLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- Danh sách các lớp học -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvCourses"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:padding="12dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
             android:scrollbars="vertical"
             tools:listitem="@layout/item_course"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <!-- Nút thêm lớp học mới
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAdd"
+        android:id="@+id/btnAdd"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:contentDescription="@string/add"
-        app:srcCompat="@drawable/ic_add_24"
+        app:srcCompat="@drawable/add_24"
         android:layout_margin="20dp"
         app:layout_anchor="@id/swipeRefresh"
         app:layout_anchorGravity="bottom|end"
-        app:tint="@android:color/white" />    -->
+        app:tint="@android:color/white" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

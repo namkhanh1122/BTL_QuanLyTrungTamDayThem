@@ -3,18 +3,18 @@ package com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.widget.Button;
+import android.widget.EditText;
 
 import androidx.lifecycle.ViewModelProvider;
 
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Core.BaseActivity;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.R;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.ViewModels.LoginViewModel;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
 
 public class LoginActivity extends BaseActivity {
-    MaterialButton btnLogin;
-    TextInputEditText edtEmail, edtPassword;
+    Button btnLogin;
+    EditText edtEmail, edtPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
