@@ -77,8 +77,10 @@ public class AddLessonActivity extends BaseActivity {
 
         // no manual status selection
 
-        binding.etBeginTime.setOnClickListener(v -> showDatePickerDialog(true));
-        binding.etEndTime.setOnClickListener(v -> showDatePickerDialog(false));
+        // --- THAY ĐỔI: Gọi hàm chọn thời gian bắt đầu ---
+        binding.etBeginTime.setOnClickListener(v -> showBeginTimePicker());
+        // --- THAY ĐỔI: Gọi hàm chọn thời gian kết thúc ---
+        binding.etEndTime.setOnClickListener(v -> showEndTimePicker());
 
         saveItem.setOnMenuItemClickListener(v -> {
             if (!validateInput()) {
@@ -89,14 +91,14 @@ public class AddLessonActivity extends BaseActivity {
             String content = binding.etContent.getText().toString().trim();
             String videoUrl = binding.etVideoUrl.getText().toString().trim();
 
-        Lesson newLesson = new Lesson(
-            title,
-            content,
-            videoUrl,
-            selectedBeginTime,
-            selectedEndTime,
-            computeStatus(selectedBeginTime, selectedEndTime)
-        );
+            Lesson newLesson = new Lesson(
+                    title,
+                    content,
+                    videoUrl,
+                    selectedBeginTime,
+                    selectedEndTime,
+                    computeStatus(selectedBeginTime, selectedEndTime)
+            );
             if (isEditMode && currentLesson != null) {
                 // update currentLesson
                 currentLesson.setTitle(title);
@@ -104,11 +106,11 @@ public class AddLessonActivity extends BaseActivity {
                 currentLesson.setVideoUrl(videoUrl);
                 currentLesson.setBeginTime(selectedBeginTime);
                 currentLesson.setEndTime(selectedEndTime);
-        currentLesson.setStatus(computeStatus(selectedBeginTime, selectedEndTime));
+                currentLesson.setStatus(computeStatus(selectedBeginTime, selectedEndTime));
 
                 ((LessonViewModel)viewModel).updateLesson(currentLesson);
             } else {
-                ((LessonViewModel)viewModel).addLesson(courseId, newLesson);
+                ((LessonViewModel)viewModel).addLesson(newLesson);
             }
 
             finish();
@@ -144,8 +146,15 @@ public class AddLessonActivity extends BaseActivity {
 
     }
 
-    private void showDatePickerDialog(boolean isBeginTime) {
+    // --- THAY ĐỔI: Đổi tên hàm và chỉ dùng cho thời gian BẮT ĐẦU ---
+    private void showBeginTimePicker() {
         Calendar calendar = Calendar.getInstance();
+
+        // Nếu đã có thời gian (chế độ sửa) thì dùng thời gian đó
+        if (selectedBeginTime != null) {
+            calendar.setTime(selectedBeginTime);
+        }
+
         DatePickerDialog.OnDateSetListener dateSetListener = (view, year, month, dayOfMonth) -> {
             calendar.set(Calendar.YEAR, year);
             calendar.set(Calendar.MONTH, month);
@@ -156,23 +165,16 @@ public class AddLessonActivity extends BaseActivity {
                 calendar.set(Calendar.MINUTE, minute);
 
                 // 3. Đã có Date đầy đủ
-                Date selectedDate = calendar.getTime();
+                selectedBeginTime = calendar.getTime();
+                binding.etBeginTime.setText(dateFormat.format(selectedBeginTime));
+                binding.tilBeginTime.setError(null); // Xóa lỗi nếu có
 
-                // (Tùy chọn) Kiểm tra logic thời gian
-                if (!isBeginTime && selectedBeginTime != null && selectedDate.before(selectedBeginTime)) {
-                    binding.tilEndTime.setError("Thời gian kết thúc phải sau thời gian bắt đầu");
-                    return;
-                } else {
-                    binding.tilEndTime.setError(null);
-                }
-
-                String formattedDate = dateFormat.format(selectedDate);
-                if (isBeginTime) {
-                    selectedBeginTime = selectedDate;
-                    binding.etBeginTime.setText(formattedDate);
-                } else {
-                    selectedEndTime = selectedDate;
-                    binding.etEndTime.setText(formattedDate);
+                // 4. KIỂM TRA: Nếu thời gian kết thúc cũ bị sai (trước thời gian bắt đầu mới)
+                // thì xóa nó đi và bắt người dùng chọn lại
+                if (selectedEndTime != null && selectedEndTime.before(selectedBeginTime)) {
+                    selectedEndTime = null;
+                    binding.etEndTime.setText("");
+                    binding.tilEndTime.setError("Vui lòng chọn lại thời gian kết thúc");
                 }
             };
 
@@ -187,6 +189,57 @@ public class AddLessonActivity extends BaseActivity {
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)).show();
     }
+
+    // --- THÊM MỚI: Hàm chỉ chọn giờ KẾT THÚC ---
+    private void showEndTimePicker() {
+        // 1. Phải chọn thời gian bắt đầu trước
+        if (selectedBeginTime == null) {
+            binding.tilBeginTime.setError("Vui lòng chọn thời gian bắt đầu trước");
+            return;
+        }
+        binding.tilBeginTime.setError(null); // Xóa lỗi
+
+        // 2. Lấy Calendar và set thời gian mặc định (là thời gian bắt đầu)
+        Calendar endCalendar = Calendar.getInstance();
+
+        // Nếu đã có thời gian kết thúc (và hợp lệ) thì dùng nó
+        if (selectedEndTime != null && !selectedEndTime.before(selectedBeginTime)) {
+            endCalendar.setTime(selectedEndTime);
+        } else {
+            // Nếu không thì lấy thời gian bắt đầu làm gợi ý
+            endCalendar.setTime(selectedBeginTime);
+        }
+
+        // 3. Chỉ hiện TimePickerDialog (Không hiện DatePicker)
+        TimePickerDialog.OnTimeSetListener timeSetListener = (timeView, hourOfDay, minute) -> {
+            // 4. Tạo 1 Calendar mới dựa trên NGÀY của thời gian BẮT ĐẦU
+            Calendar newEndCalendar = Calendar.getInstance();
+            newEndCalendar.setTime(selectedBeginTime); // Quan trọng: Đặt ngày = ngày bắt đầu
+
+            // Set giờ và phút người dùng mới chọn
+            newEndCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+            newEndCalendar.set(Calendar.MINUTE, minute);
+
+            Date newEndDate = newEndCalendar.getTime();
+
+            // 5. Validation: Thời gian kết thúc phải SAU thời gian bắt đầu
+            if (newEndDate.before(selectedBeginTime) || newEndDate.equals(selectedBeginTime)) {
+                binding.tilEndTime.setError("Thời gian kết thúc phải sau thời gian bắt đầu");
+                return;
+            }
+
+            // Hợp lệ
+            binding.tilEndTime.setError(null);
+            selectedEndTime = newEndDate;
+            binding.etEndTime.setText(dateFormat.format(selectedEndTime));
+        };
+
+        new TimePickerDialog(this, timeSetListener,
+                endCalendar.get(Calendar.HOUR_OF_DAY),
+                endCalendar.get(Calendar.MINUTE),
+                true).show(); // true = 24h format
+    }
+
 
     private boolean validateInput() {
         boolean valid = true;
@@ -214,9 +267,12 @@ public class AddLessonActivity extends BaseActivity {
             binding.tilEndTime.setError(null);
         }
 
-        if (selectedBeginTime != null && selectedEndTime != null && selectedEndTime.before(selectedBeginTime)) {
-            binding.tilEndTime.setError("Thời gian kết thúc phải sau thời gian bắt đầu");
-            valid = false;
+        // --- SỬA ĐỔI: Kiểm tra nghiêm ngặt hơn ---
+        if (selectedBeginTime != null && selectedEndTime != null) {
+            if (selectedEndTime.before(selectedBeginTime) || selectedEndTime.equals(selectedBeginTime)) {
+                binding.tilEndTime.setError("Thời gian kết thúc phải sau thời gian bắt đầu");
+                valid = false;
+            }
         }
         return valid;
     }

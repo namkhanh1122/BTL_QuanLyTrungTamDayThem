@@ -1,32 +1,29 @@
 package com.androidpro.BTL_QuanLyTrungTamDayThem.Firebase;
 
-import androidx.annotation.NonNull;
-
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Attendance;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Course;
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Document;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Lesson;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Student;
+
 import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.firestore.WriteBatch;
 
-
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class FirebaseRepository {
-    private final  FirebaseDatabase database = FirebaseDatabase.getInstance("https://qltrungtamdaythem-default-rtdb.asia-southeast1.firebasedatabase.app");
-    private final DatabaseReference courseRef;
-    private final DatabaseReference lessonRef;
-    private final DatabaseReference studentRef;
-    private final DatabaseReference documentRef;
-    private final DatabaseReference gradeRef;
-    private final DatabaseReference attendanceRef;
+
+    private final FirebaseFirestore db;
+    private final CollectionReference coursesRef;
+    private final CollectionReference studentsRef;
+
     private static final FirebaseRepository instance = new FirebaseRepository();
 
     public interface DataCallback<T> {
@@ -34,349 +31,279 @@ public class FirebaseRepository {
         void onError(String error);
     }
 
-    public FirebaseRepository() {
-        courseRef = database.getReference("Courses");
-        lessonRef = database.getReference("Lessons");
-        studentRef = database.getReference("Students");
-        documentRef = database.getReference("Documents");
-        gradeRef = database.getReference("Grades");
-        attendanceRef = database.getReference("Attendances");
+    private FirebaseRepository() {
+        db = FirebaseFirestore.getInstance();
+        coursesRef = db.collection("Courses");
+        studentsRef = db.collection("Students");
     }
 
     public static FirebaseRepository getInstance() {
         return instance;
     }
 
-    public void addCourses(Course course, DataCallback<Course> callback) {
-        String id = courseRef.push().getKey();
-
-        if (id == null) {
-            callback.onError("Failed to create lesson ID");
-            return;
-        }
-
-        course.setId(id);
-
-        courseRef.child(String.valueOf(course.getId())).setValue(course)
+    public void addCourse(Course course, DataCallback<Course> callback) {
+        DocumentReference docRef = coursesRef.document();
+        course.setId(docRef.getId());
+        docRef.set(course)
                 .addOnSuccessListener(aVoid -> callback.onSuccess(course))
                 .addOnFailureListener(e -> callback.onError(e.getMessage()));
     }
 
-    public void deleteCourse(String courseId, DataCallback<Course> callback) {
-        courseRef.child(courseId).removeValue()
-                .addOnSuccessListener(aVoid -> callback.onSuccess(null));
-    }
-
-    public void updateCourse(Course course, DataCallback<Course> callback) {
-        courseRef.child(course.getId()).setValue(course)
-                .addOnSuccessListener(aVoid -> callback.onSuccess(course));
-    }
-
-    public void getCourseById(String courseId,DataCallback<Course> callback) {
-        courseRef.child(courseId).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                DataSnapshot dataSnapshot = task.getResult();
-                if (dataSnapshot.exists()) {
-                    Course course = dataSnapshot.getValue(Course.class);
-                    callback.onSuccess(course);
-                } else {
-                    callback.onError("Course not found: " + courseId);
-                }
-            } else {
-                callback.onError(task.getException().getMessage());
-            }
-        });
-    }
-    public void listenCourses(DataCallback<List<Course>> callback) {
-        courseRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                List<Course> list = new ArrayList<>();
-                for (DataSnapshot s : snapshot.getChildren()) {
-                    Course c = s.getValue(Course.class);
-                    if (c != null && c.getInstructorId().equals(FirebaseAuth.getInstance().getCurrentUser().getUid()))
-                    {
-                        list.add(c);
+    public void getCourse(String courseId, DataCallback<Course> callback) {
+        coursesRef.document(courseId).get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists()) {
+                        callback.onSuccess(doc.toObject(Course.class));
+                    } else {
+                        callback.onError("Không tìm thấy khóa học.");
                     }
-                }
-                callback.onSuccess(list);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                callback.onError(error.getMessage());
-            }
-        });
-    }
-
-    public void addStudentToCourse(String courseId, Student student, DataCallback<Student> callback) {
-        String id = studentRef.push().getKey();
-
-        if (id == null) {
-            callback.onError("Failed to create lesson ID");
-            return;
-        }
-        student.setId(id);
-
-        student.setCourseId(courseId);
-
-        studentRef.child(String.valueOf(student.getId())).setValue(student)
-                .addOnCompleteListener(aVoid -> callback.onSuccess(student))
+                })
                 .addOnFailureListener(e -> callback.onError(e.getMessage()));
     }
 
-    public void getStudentById(String studentId,DataCallback<Student> callback) {
-        studentRef.child(studentId).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                DataSnapshot dataSnapshot = task.getResult();
-                if (dataSnapshot.exists()) {
-                    Student student = dataSnapshot.getValue(Student.class);
-                    callback.onSuccess(student);
-                } else {
-                    callback.onError("Course not found: " + studentId);
-                }
-            } else {
-                callback.onError(task.getException().getMessage());
-            }
-        });
+    public void updateCourse(Course course, DataCallback<Course> callback) {
+        coursesRef.document(course.getId()).set(course, SetOptions.merge())
+                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                .addOnFailureListener(e -> callback.onError(e.getMessage()));
     }
 
-    public void updateStudent(Student student, DataCallback<Student> callback) {
-        if (student == null || student.getId() == null) {
-            callback.onError("Invalid student");
-            return;
-        }
+    public void deleteCourse(String courseId, DataCallback<Course> callback) {
+        coursesRef.document(courseId).delete()
+                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                .addOnFailureListener(e -> callback.onError(e.getMessage()));
+    }
 
-        studentRef.child(student.getId()).setValue(student)
+    public void listenCoursesForInstructor(String instructorId, DataCallback<List<Course>> callback) {
+        coursesRef.whereEqualTo("instructorId", instructorId)
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null) {
+                        callback.onError(error.getMessage());
+                        return;
+                    }
+                    if (snapshot != null) {
+                        callback.onSuccess(snapshot.toObjects(Course.class));
+                    }
+                });
+    }
+
+    public void addStudent(Student student, DataCallback<Student> callback) {
+        DocumentReference docRef = studentsRef.document();
+        student.setId(docRef.getId());
+        docRef.set(student)
                 .addOnSuccessListener(aVoid -> callback.onSuccess(student))
                 .addOnFailureListener(e -> callback.onError(e.getMessage()));
     }
 
-    public void deleteStudent(String studentId, DataCallback<Student> callback) {
-        // First remove any attendance records that belong to this student, then remove the student
-        attendanceRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                List<String> attendanceIds = new ArrayList<>();
-                for (DataSnapshot s : snapshot.getChildren()) {
-                    Attendance at = s.getValue(Attendance.class);
-                    if (at != null && studentId.equals(at.getStudentId())) {
-                        // use the node key (s.getKey()) which should equal at.getId() when created
-                        String key = s.getKey();
-                        if (key != null) attendanceIds.add(key);
-                    }
-                }
-
-                if (attendanceIds.isEmpty()) {
-                    // No attendances to remove, delete student directly
-                    studentRef.child(studentId).removeValue()
-                            .addOnSuccessListener(aVoid -> callback.onSuccess(null))
-                            .addOnFailureListener(e -> callback.onError(e.getMessage()));
-                    return;
-                }
-
-                final java.util.concurrent.atomic.AtomicInteger remaining = new java.util.concurrent.atomic.AtomicInteger(attendanceIds.size());
-                final java.util.concurrent.atomic.AtomicInteger failed = new java.util.concurrent.atomic.AtomicInteger(0);
-
-                for (String aid : attendanceIds) {
-                    attendanceRef.child(aid).removeValue()
-                            .addOnSuccessListener(aVoid -> {
-                                if (remaining.decrementAndGet() == 0) {
-                                    if (failed.get() == 0) {
-                                        // all attendance removed -> remove student
-                                        studentRef.child(studentId).removeValue()
-                                                .addOnSuccessListener(aVoid2 -> callback.onSuccess(null))
-                                                .addOnFailureListener(e -> callback.onError(e.getMessage()));
-                                    } else {
-                                        callback.onError("Failed to remove some attendance records");
-                                    }
-                                }
-                            })
-                            .addOnFailureListener(e -> {
-                                failed.incrementAndGet();
-                                if (remaining.decrementAndGet() == 0) {
-                                    callback.onError("Failed to remove some attendance records: " + e.getMessage());
-                                }
-                            });
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                callback.onError(error.getMessage());
-            }
-        });
-    }
-
-    public void listenStudentsInCourses(String courseId, DataCallback<List<Student>> callback) {
-        studentRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                List<Student> students = new ArrayList<>();
-                for (DataSnapshot s : snapshot.getChildren()) {
-                    Student student = s.getValue(Student.class);
-                    if (student != null && student.getCourseId().equals(courseId))
-                    {
-                        students.add(student);
-                    }
-                }
-                callback.onSuccess(students);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                callback.onError(error.getMessage());
-            }
-        });
-    }
-
-    public void addLessonToCourse(String courseId, Lesson lesson, DataCallback<Lesson> callback) {
-        String lessonId = lessonRef.push().getKey();
-
-        if (lessonId == null) {
-            callback.onError("Failed to create lesson ID");
+    public void updateStudent(Student student, DataCallback<Student> callback) {
+        if (student == null || student.getId() == null) {
+            callback.onError("Invalid student data");
             return;
         }
-        lesson.setId(lessonId);
+        studentsRef.document(student.getId()).set(student, SetOptions.merge())
+                .addOnSuccessListener(aVoid -> callback.onSuccess(student))
+                .addOnFailureListener(e -> callback.onError(e.getMessage()));
+    }
 
+    public void getStudent(String studentId, DataCallback<Student> callback) {
+        studentsRef.document(studentId).get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists()) {
+                        callback.onSuccess(doc.toObject(Student.class));
+                    } else {
+                        callback.onError("Không tìm thấy sinh viên.");
+                    }
+                })
+                .addOnFailureListener(e -> callback.onError(e.getMessage()));
+    }
+
+    public void deleteStudent(String studentId, DataCallback<Student> callback) {
+        db.collectionGroup("Attendances").whereEqualTo("studentId", studentId)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        callback.onError("Lỗi khi tìm điểm danh: " + task.getException().getMessage());
+                        return;
+                    }
+
+                    WriteBatch batch = db.batch();
+
+                    if (!task.getResult().isEmpty()) {
+                        for (DocumentSnapshot doc : task.getResult().getDocuments()) {
+                            batch.delete(doc.getReference());
+                        }
+                    }
+
+                    batch.delete(studentsRef.document(studentId));
+
+                    batch.commit()
+                            .addOnSuccessListener(aVoid -> callback.onSuccess(null)) // Trả về null
+                            .addOnFailureListener(e -> callback.onError(e.getMessage()));
+                });
+    }
+
+    public void listenStudentsInCourse(String courseId, DataCallback<List<Student>> callback) {
+        studentsRef.whereEqualTo("courseId", courseId)
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null) {
+                        callback.onError(error.getMessage());
+                        return;
+                    }
+                    if (snapshot != null) {
+                        callback.onSuccess(snapshot.toObjects(Student.class));
+                    }
+                });
+    }
+
+    private CollectionReference getLessonsCol(String courseId) {
+        return coursesRef.document(courseId).collection("Lessons");
+    }
+
+    private void findLessonRefById(String lessonId, DataCallback<DocumentReference> callback) {
+        if (lessonId == null || lessonId.isEmpty()) {
+            callback.onError("Lesson ID không hợp lệ.");
+            return;
+        }
+
+        db.collectionGroup("Lessons").whereEqualTo("id", lessonId)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (querySnapshot == null || querySnapshot.isEmpty()) {
+                        callback.onError("Không tìm thấy lesson với ID: " + lessonId);
+                        return;
+                    }
+
+                    DocumentReference lessonRef = querySnapshot.getDocuments().get(0).getReference();
+                    callback.onSuccess(lessonRef);
+                })
+                .addOnFailureListener(e -> callback.onError("Lỗi khi tìm lesson: " + e.getMessage()));
+    }
+
+    public void addLesson(String courseId, Lesson lesson, DataCallback<Lesson> callback) {
+        DocumentReference docRef = getLessonsCol(courseId).document();
+        lesson.setId(docRef.getId());
         lesson.setCourseId(courseId);
-
-
-        lessonRef.child(lessonId).setValue(lesson)
-                .addOnCompleteListener(aVoid -> callback.onSuccess(lesson))
+        docRef.set(lesson)
+                .addOnSuccessListener(aVoid -> callback.onSuccess(lesson))
                 .addOnFailureListener(e -> callback.onError(e.getMessage()));
     }
 
     public void updateLesson(Lesson lesson, DataCallback<Lesson> callback) {
         if (lesson == null || lesson.getId() == null) {
-            callback.onError("Invalid lesson");
+            callback.onError("Invalid lesson data");
             return;
         }
-
-        lessonRef.child(lesson.getId()).setValue(lesson)
-                .addOnSuccessListener(aVoid -> callback.onSuccess(lesson))
-                .addOnFailureListener(e -> callback.onError(e.getMessage()));
-    }
-
-    public void deleteLesson(String lessonId, DataCallback<Lesson> callback) {
-        lessonRef.child(lessonId).removeValue()
-                .addOnSuccessListener(aVoid -> callback.onSuccess(null))
-                .addOnFailureListener(e -> callback.onError(e.getMessage()));
-    }
-
-
-    public void getLessonById(String lessonId, DataCallback<Lesson> callback) {
-        lessonRef.child(lessonId).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                DataSnapshot dataSnapshot = task.getResult();
-                if (dataSnapshot.exists()) {
-                    Lesson lesson = dataSnapshot.getValue(Lesson.class);
-                    callback.onSuccess(lesson);
-                } else {
-                    callback.onError("Course not found: " + lessonId);
-                }
-            } else {
-                callback.onError(task.getException().getMessage());
-            }
-        });
-    }
-
-    public void listenLessonsRealtime(DataCallback<List<Lesson>> callback) {
-        lessonRef.addValueEventListener(new ValueEventListener() {
+        findLessonRefById(lesson.getId(), new DataCallback<>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                List<Lesson> lessons = new ArrayList<>();
-                for (DataSnapshot s : snapshot.getChildren()) {
-                    Lesson lesson = s.getValue(Lesson.class);
-                    if (lesson != null)
-                    {
-                        lessons.add(lesson);
-                    }
-                }
-                callback.onSuccess(lessons);
+            public void onSuccess(DocumentReference lessonRef) {
+                lessonRef.set(lesson, SetOptions.merge())
+                        .addOnSuccessListener(aVoid -> callback.onSuccess(lesson))
+                        .addOnFailureListener(e -> callback.onError(e.getMessage()));
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                callback.onError(error.getMessage());
+            public void onError(String error) {
+                callback.onError("Lỗi khi cập nhật lesson: " + error);
             }
         });
     }
 
     public void listenLessonsInCourse(String courseId, DataCallback<List<Lesson>> callback) {
-        lessonRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                List<Lesson> lessons = new ArrayList<>();
-                for (DataSnapshot s : snapshot.getChildren()) {
-                    Lesson lesson = s.getValue(Lesson.class);
-                    if (lesson != null && lesson.getCourseId().equals(courseId))
-                    {
-                        lessons.add(lesson);
+        getLessonsCol(courseId).orderBy("beginTime")
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null) {
+                        callback.onError(error.getMessage());
+                        return;
                     }
-                }
-                callback.onSuccess(lessons);
-            }
+                    if (snapshot != null) {
+                        callback.onSuccess(snapshot.toObjects(Lesson.class));
+                    }
+                });
+    }
 
+    public void deleteLesson(String lessonId, DataCallback<Lesson> callback) {
+        findLessonRefById(lessonId, new DataCallback<>() {
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                callback.onError(error.getMessage());
+            public void onSuccess(DocumentReference lessonRef) {
+                lessonRef.delete()
+                        .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                        .addOnFailureListener(e -> callback.onError(e.getMessage()));
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError("Lỗi khi xóa lesson: " + error);
             }
         });
     }
 
-    public void addAttendance(Attendance attendance, DataCallback<Attendance> callback) {
-        String id = attendanceRef.push().getKey();
-        if (id == null) {
-            callback.onError("Failed to create attendance ID");
+    public void getLesson(String lessonId, DataCallback<Lesson> callback) {
+        findLessonRefById(lessonId, new DataCallback<>() {
+            @Override
+            public void onSuccess(DocumentReference lessonRef) {
+                lessonRef.get().addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            Lesson lesson = documentSnapshot.toObject(Lesson.class);
+                            callback.onSuccess(lesson);
+                        } else {
+                            callback.onError("Không tìm thấy tài liệu (có thể đã bị xóa).");
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        callback.onError("Lỗi khi lấy dữ liệu lesson: " + e.getMessage());
+                    });
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError("Lỗi khi tìm lesson: " + error);
+            }
+        });
+    }
+
+    private void findAttendanceRefById(String attendanceId, DataCallback<DocumentReference> callback) {
+        if (attendanceId == null || attendanceId.isEmpty()) {
+            callback.onError("Attendance ID không hợp lệ.");
             return;
         }
-        attendance.setId(id);
 
-        attendanceRef.child(id).setValue(attendance)
-                .addOnSuccessListener(aVoid -> callback.onSuccess(attendance))
-                .addOnFailureListener(e -> callback.onError(e.getMessage()));
+        db.collectionGroup("Attendances").whereEqualTo("id", attendanceId)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (querySnapshot == null || querySnapshot.isEmpty()) {
+                        callback.onError("Không tìm thấy dữ liệu với ID: " + attendanceId);
+                        return;
+                    }
+                    DocumentReference attRef = querySnapshot.getDocuments().get(0).getReference();
+                    callback.onSuccess(attRef);
+                })
+                .addOnFailureListener(e -> callback.onError("Lỗi khi tìm attendance: " + e.getMessage()));
     }
 
-    public void listenAttendanceInLesson(String lessonId, DataCallback<List<Attendance>> callback) {
-        attendanceRef.addListenerForSingleValueEvent(new ValueEventListener() {
+    public void addAttendance(String lessonId, Attendance attendance, DataCallback<Attendance> callback) {
+        if (attendance == null) {
+            callback.onError("Dữ liệu Attendance bị null");
+            return;
+        }
+
+        findLessonRefById(lessonId, new DataCallback<>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                List<Attendance> attendances = new ArrayList<>();
-                for (DataSnapshot s : snapshot.getChildren()) {
-                    Attendance attendance = s.getValue(Attendance.class);
-                    if (attendance != null && attendance.getLessonId().equals(lessonId))
-                    {
-                        attendances.add(attendance);
-                    }
-                }
-                callback.onSuccess(attendances);
+            public void onSuccess(DocumentReference lessonRef) {
+
+                CollectionReference attendanceCol = lessonRef.collection("Attendances");
+
+                DocumentReference docRef = attendanceCol.document();
+                attendance.setId(docRef.getId());
+                attendance.setLessonId(lessonId);
+
+                docRef.set(attendance)
+                        .addOnSuccessListener(aVoid -> callback.onSuccess(attendance))
+                        .addOnFailureListener(e -> callback.onError(e.getMessage()));
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                callback.onError(error.getMessage());
-            }
-        });
-    }
-
-    public void getAttendancesByStudentId(String studentId, DataCallback<List<Attendance>> callback) {
-        attendanceRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                List<Attendance> attendances = new ArrayList<>();
-                for (DataSnapshot s : snapshot.getChildren()) {
-                    Attendance attendance = s.getValue(Attendance.class);
-                    if (attendance != null && studentId != null && studentId.equals(attendance.getStudentId())) {
-                        attendances.add(attendance);
-                    }
-                }
-                callback.onSuccess(attendances);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                callback.onError(error.getMessage());
+            public void onError(String error) {
+                // Lỗi từ findLessonRefById (không tìm thấy lesson)
+                callback.onError(error);
             }
         });
     }
@@ -386,9 +313,234 @@ public class FirebaseRepository {
             callback.onError("Invalid attendance data");
             return;
         }
+        findAttendanceRefById(attendance.getId(), new DataCallback<>() {
+            @Override
+            public void onSuccess(DocumentReference attRef) {
+                attRef.set(attendance, SetOptions.merge())
+                        .addOnSuccessListener(aVoid -> callback.onSuccess(attendance))
+                        .addOnFailureListener(e -> callback.onError(e.getMessage()));
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
 
-        attendanceRef.child(attendance.getId()).setValue(attendance)
-                .addOnSuccessListener(aVoid -> callback.onSuccess(attendance))
+    public void deleteAttendance(String attendanceId, DataCallback<Void> callback) {
+        findAttendanceRefById(attendanceId, new DataCallback<>() {
+            @Override
+            public void onSuccess(DocumentReference attRef) {
+                attRef.delete()
+                        .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                        .addOnFailureListener(e -> callback.onError(e.getMessage()));
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    public void getAttendance(String attendanceId, DataCallback<Attendance> callback) {
+        findAttendanceRefById(attendanceId, new DataCallback<>() {
+            @Override
+            public void onSuccess(DocumentReference attRef) {
+                attRef.get().addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                callback.onSuccess(documentSnapshot.toObject(Attendance.class));
+                            } else {
+                                callback.onError("Không tìm thấy tài liệu.");
+                            }
+                        })
+                        .addOnFailureListener(e -> {
+                            callback.onError("Lỗi khi lấy dữ liệu attendance: " + e.getMessage());
+                        });
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    public void getAttendancesInLesson(String lessonId, DataCallback<List<Attendance>> callback) {
+        findLessonRefById(lessonId, new DataCallback<>() {
+            @Override
+            public void onSuccess(DocumentReference lessonRef) {
+                lessonRef.collection("Attendances").get()
+                        .addOnSuccessListener(snapshot -> {
+                            callback.onSuccess(snapshot.toObjects(Attendance.class));
+                        })
+                        .addOnFailureListener(e -> callback.onError(e.getMessage()));
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    public void getAttendancesForStudent(String studentId, DataCallback<List<Attendance>> callback) {
+        db.collectionGroup("Attendances").whereEqualTo("studentId", studentId)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    callback.onSuccess(snapshot.toObjects(Attendance.class));
+                })
                 .addOnFailureListener(e -> callback.onError(e.getMessage()));
+    }
+
+    public void listenAttendancesInLesson(String lessonId, DataCallback<List<Attendance>> callback) {
+        findLessonRefById(lessonId, new DataCallback<>() {
+            @Override
+            public void onSuccess(DocumentReference lessonRef) {
+                lessonRef.collection("Attendances")
+                        .addSnapshotListener((snapshot, error) -> {
+                            if (error != null) {
+                                callback.onError(error.getMessage());
+                                return;
+                            }
+                            if (snapshot != null) {
+                                callback.onSuccess(snapshot.toObjects(Attendance.class));
+                            }
+                        });
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    private void findDocumentRefById(String documentId, DataCallback<DocumentReference> callback) {
+        if (documentId == null || documentId.isEmpty()) {
+            callback.onError("Document ID không hợp lệ.");
+            return;
+        }
+        db.collectionGroup("Documents").whereEqualTo("id", documentId)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (querySnapshot == null || querySnapshot.isEmpty()) {
+                        callback.onError("Không tìm thấy document với ID: " + documentId);
+                        return;
+                    }
+                    callback.onSuccess(querySnapshot.getDocuments().get(0).getReference());
+                })
+                .addOnFailureListener(e -> callback.onError("Lỗi khi tìm document: " + e.getMessage()));
+    }
+
+    public void addDocument(String lessonId, Document document, DataCallback<Document> callback) {
+        if (document == null) {
+            callback.onError("Dữ liệu Document bị null");
+            return;
+        }
+        // 1. Tìm Lesson cha
+        findLessonRefById(lessonId, new DataCallback<>() {
+            @Override
+            public void onSuccess(DocumentReference lessonRef) {
+                // 2. Thêm Document vào sub-collection
+                CollectionReference docCol = lessonRef.collection("Documents");
+                DocumentReference docRef = docCol.document();
+                document.setId(docRef.getId());
+                // Giả sử model Document có setLessonId(lessonId)
+                // document.setLessonId(lessonId);
+
+                docRef.set(document)
+                        .addOnSuccessListener(aVoid -> callback.onSuccess(document))
+                        .addOnFailureListener(e -> callback.onError(e.getMessage()));
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError(error); // Lỗi không tìm thấy Lesson
+            }
+        });
+    }
+
+    public void getDocument(String documentId, DataCallback<Document> callback) {
+        findDocumentRefById(documentId, new DataCallback<>() {
+            @Override
+            public void onSuccess(DocumentReference docRef) {
+                docRef.get().addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                callback.onSuccess(documentSnapshot.toObject(Document.class));
+                            } else {
+                                callback.onError("Không tìm thấy tài liệu.");
+                            }
+                        })
+                        .addOnFailureListener(e -> {
+                            callback.onError("Lỗi khi lấy dữ liệu document: " + e.getMessage());
+                        });
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    public void updateDocument(Document document, DataCallback<Document> callback) {
+        if (document == null || document.getId() == null) {
+            callback.onError("Invalid document data");
+            return;
+        }
+        findDocumentRefById(document.getId(), new DataCallback<>() {
+            @Override
+            public void onSuccess(DocumentReference docRef) {
+                docRef.set(document, SetOptions.merge())
+                        .addOnSuccessListener(aVoid -> callback.onSuccess(document))
+                        .addOnFailureListener(e -> callback.onError(e.getMessage()));
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    public void deleteDocument(String documentId, DataCallback<Void> callback) {
+        findDocumentRefById(documentId, new DataCallback<>() {
+            @Override
+            public void onSuccess(DocumentReference docRef) {
+                docRef.delete()
+                        .addOnSuccessListener(aVoid -> callback.onSuccess(null))
+                        .addOnFailureListener(e -> callback.onError(e.getMessage()));
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    public void listenDocumentsInLesson(String lessonId, DataCallback<List<Document>> callback) {
+        findLessonRefById(lessonId, new DataCallback<>() {
+            @Override
+            public void onSuccess(DocumentReference lessonRef) {
+                lessonRef.collection("Documents").addSnapshotListener((snapshot, error) -> {
+                    if (error != null) {
+                        callback.onError(error.getMessage());
+                        return;
+                    }
+                    if (snapshot != null) {
+                        callback.onSuccess(snapshot.toObjects(Document.class));
+                    }
+                });
+            }
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
+
+    public Task<QuerySnapshot> getCoursesForInstructor_Task(String instructorId) {
+        return coursesRef.whereEqualTo("instructorId", instructorId).get();
+    }
+
+    public Task<QuerySnapshot> getFutureLessonsInCourse_Task(String courseId) {
+        return getLessonsCol(courseId)
+                .whereGreaterThan("beginTime", new Date())
+                .get();
     }
 }

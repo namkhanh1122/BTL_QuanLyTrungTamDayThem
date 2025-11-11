@@ -29,15 +29,6 @@
         <activity
             android:name=".Views.Activities.AddCourseActivity"
             android:exported="false" />
-
-        <service
-            android:name=".Firebase.FirebaseMessageService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
-
         <activity
             android:name=".Views.Activities.MainActivity"
             android:exported="false"
@@ -60,6 +51,22 @@
         <activity android:name=".Views.Activities.AttendanceActivity" />
         <activity android:name=".Views.Activities.AlertsActivity" />
         <activity android:name=".Views.Activities.GradeManagementActivity" />
+
+        <receiver
+            android:name=".Workers.ScheduleWidgetProvider"
+            android:exported="false"> <intent-filter>
+            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/schedule_widget_info" />
+        </receiver>
+
+        <service
+            android:name=".Workers.ScheduleWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:exported="false" />
     </application>
 
 </manifest>

@@ -19,12 +19,14 @@ public class LessonViewModel extends BaseViewModel {
     public MutableLiveData<List<Student>> studentList = new MutableLiveData<>();
     public MutableLiveData<List<Attendance>> attendanceList = new MutableLiveData<>();
 
+    private String courseId;
+
     public LessonViewModel(@NonNull Application application) {
         super(application);
     }
 
     public void loadLessonDetails(String lessonId) {
-        FirebaseRepository.getInstance().getLessonById(lessonId, new FirebaseRepository.DataCallback<>() {
+        FirebaseRepository.getInstance().getLesson(lessonId, new FirebaseRepository.DataCallback<>() {
             @Override
             public void onSuccess(Lesson data) {
                 lessonDetail.postValue(data);
@@ -37,6 +39,7 @@ public class LessonViewModel extends BaseViewModel {
     }
 
     public void loadLessonsInCourseRealtime(String courseId) {
+        this.courseId = courseId;
         FirebaseRepository.getInstance().listenLessonsInCourse(courseId, new FirebaseRepository.DataCallback<>() {
             @Override
             public void onSuccess(List<Lesson> data) {
@@ -52,8 +55,8 @@ public class LessonViewModel extends BaseViewModel {
     }
 
 
-    public void addLesson(String courseId, Lesson lesson) {
-        FirebaseRepository.getInstance().addLessonToCourse( courseId, lesson, new FirebaseRepository.DataCallback<>() {
+    public void addLesson(Lesson lesson) {
+        FirebaseRepository.getInstance().addLesson(courseId, lesson, new FirebaseRepository.DataCallback<>() {
             @Override
             public void onSuccess(Lesson data) {
                 notifyMessage.postValue("Thêm buổi học thành công");
@@ -81,14 +84,14 @@ public class LessonViewModel extends BaseViewModel {
 
     // Load attendance entries for a lesson
     public void loadAttendanceForLesson(String lessonId) {
-        FirebaseRepository.getInstance().listenAttendanceInLesson(lessonId, new FirebaseRepository.DataCallback<>() {
+        FirebaseRepository.getInstance().listenAttendancesInLesson(lessonId, new FirebaseRepository.DataCallback<>() {
             @Override
             public void onSuccess(List<Attendance> data) {
                 if (data != null && !data.isEmpty()) {
                     attendanceList.postValue(data);
                 } else {
                     // No attendance records yet for this lesson -> create default attendance entries from students in the course
-                    FirebaseRepository.getInstance().getLessonById(lessonId, new FirebaseRepository.DataCallback<>() {
+                    FirebaseRepository.getInstance().getLesson(lessonId, new FirebaseRepository.DataCallback<>() {
                         @Override
                         public void onSuccess(Lesson lesson) {
                             if (lesson == null || lesson.getCourseId() == null) {
@@ -97,7 +100,7 @@ public class LessonViewModel extends BaseViewModel {
                             }
 
                             String courseId = lesson.getCourseId();
-                            FirebaseRepository.getInstance().listenStudentsInCourses(courseId, new FirebaseRepository.DataCallback<>() {
+                            FirebaseRepository.getInstance().listenStudentsInCourse(courseId, new FirebaseRepository.DataCallback<>() {
                                 @Override
                                 public void onSuccess(List<Student> students) {
                                     if (students == null || students.isEmpty()) {
@@ -116,7 +119,7 @@ public class LessonViewModel extends BaseViewModel {
                                         a.setName(s.getName());
 
                                         // addAttendance will set id on the same Attendance instance
-                                        FirebaseRepository.getInstance().addAttendance(a, new FirebaseRepository.DataCallback<>() {
+                                        FirebaseRepository.getInstance().addAttendance(lessonId, a, new FirebaseRepository.DataCallback<>() {
                                             @Override
                                             public void onSuccess(Attendance data) {
                                                 created.add(data);

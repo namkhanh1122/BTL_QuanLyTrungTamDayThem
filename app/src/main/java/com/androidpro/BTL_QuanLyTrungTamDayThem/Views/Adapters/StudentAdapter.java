@@ -55,7 +55,7 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.VH> {
         h.tvAverageGrade.setText("0.0");
         h.tvAttendanceRatio.setText("0 / 0");
 
-        FirebaseRepository.getInstance().getAttendancesByStudentId(s.getId(), new FirebaseRepository.DataCallback<>() {
+        FirebaseRepository.getInstance().getAttendancesForStudent(s.getId(), new FirebaseRepository.DataCallback<>() {
             @Override
             public void onSuccess(List<Attendance> attendances) {
                 int currentPos = h.getBindingAdapterPosition();

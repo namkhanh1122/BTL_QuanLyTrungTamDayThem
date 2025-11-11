@@ -11,6 +11,7 @@ import com.androidpro.BTL_QuanLyTrungTamDayThem.Firebase.FirebaseRepository;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Course;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Lesson;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Student;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class CourseViewModel extends BaseViewModel {
     }
 
     public void loadCourseDetails(String courseId) {
-        FirebaseRepository.getInstance().getCourseById(courseId, new FirebaseRepository.DataCallback<>() {
+        FirebaseRepository.getInstance().getCourse(courseId, new FirebaseRepository.DataCallback<>() {
             @Override
             public void onSuccess(Course data) {
                 courseDetails.postValue(data);
@@ -40,7 +41,7 @@ public class CourseViewModel extends BaseViewModel {
     }
 
     public void addLesson(String courseId, Lesson lesson) {
-        FirebaseRepository.getInstance().addLessonToCourse( courseId, lesson, new FirebaseRepository.DataCallback<>() {
+        FirebaseRepository.getInstance().addLesson(courseId, lesson, new FirebaseRepository.DataCallback<>() {
             @Override
             public void onSuccess(Lesson data) {
                 notifyMessage.postValue("Thêm buổi học thành công");
@@ -66,7 +67,7 @@ public class CourseViewModel extends BaseViewModel {
     }
 
     public void loadStudentForCourse(String courseId) {
-        FirebaseRepository.getInstance().listenStudentsInCourses(courseId, new FirebaseRepository.DataCallback<>() {
+        FirebaseRepository.getInstance().listenStudentsInCourse(courseId, new FirebaseRepository.DataCallback<>() {
             @Override
             public void onSuccess(List<Student> data) {
                 studentList.postValue(data);
@@ -79,7 +80,8 @@ public class CourseViewModel extends BaseViewModel {
     }
 
     public void addStudent(String courseId, Student student) {
-        FirebaseRepository.getInstance().addStudentToCourse(courseId, student, new FirebaseRepository.DataCallback<>() {
+        student.setCourseId(courseId);
+        FirebaseRepository.getInstance().addStudent(student, new FirebaseRepository.DataCallback<>() {
             @Override
             public void onSuccess(Student data) {
                 notifyMessage.postValue("Thêm học viên thành công");
@@ -121,7 +123,7 @@ public class CourseViewModel extends BaseViewModel {
     }
 
     public void loadCoursesRealtime() {
-        FirebaseRepository.getInstance().listenCourses(new FirebaseRepository.DataCallback<>() {
+        FirebaseRepository.getInstance().listenCoursesForInstructor(FirebaseAuth.getInstance().getUid(), new FirebaseRepository.DataCallback<>() {
             @Override
             public void onSuccess(List<Course> data) {
                 courseList.postValue(data);
@@ -136,7 +138,7 @@ public class CourseViewModel extends BaseViewModel {
     }
 
     public void addCourse(Course course) {
-        FirebaseRepository.getInstance().addCourses(course, new FirebaseRepository.DataCallback<>() {
+        FirebaseRepository.getInstance().addCourse(course, new FirebaseRepository.DataCallback<>() {
             @Override
             public void onSuccess(Course data) {
                 notifyMessage.postValue("Thêm lớp học thành công");
@@ -173,7 +175,7 @@ public class CourseViewModel extends BaseViewModel {
         });
     }
 
-    public void deleteLesson(String courseId, String lessonId) {
+    public void deleteLesson(String lessonId) {
         FirebaseRepository.getInstance().deleteLesson(lessonId, new FirebaseRepository.DataCallback<>() {
             @Override
             public void onSuccess(Lesson data) {
