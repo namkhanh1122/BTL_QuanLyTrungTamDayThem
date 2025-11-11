@@ -1,6 +1,7 @@
 package com.androidpro.BTL_QuanLyTrungTamDayThem.Workers;
 
 import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
@@ -11,6 +12,8 @@ import android.widget.Toast;
 
 import com.androidpro.BTL_QuanLyTrungTamDayThem.R;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Activities.LessonDetailActivity;
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Activities.MainActivity;
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Activities.SplashActivity;
 
 public class ScheduleWidgetProvider extends AppWidgetProvider {
     public static final String ACTION_REFRESH = "com.androidpro.BTL_QuanLyTrungTamDayThem.ACTION_REFRESH";
@@ -40,17 +43,14 @@ public class ScheduleWidgetProvider extends AppWidgetProvider {
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.layout_schedule_widget);
 
-        // ... (Code cũ của bạn cho serviceIntent, setRemoteAdapter, setEmptyView) ...
         Intent serviceIntent = new Intent(context, ScheduleWidgetService.class);
         serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         serviceIntent.setData(Uri.parse(serviceIntent.toUri(Intent.URI_INTENT_SCHEME)));
         views.setRemoteAdapter(R.id.widget_list_view, serviceIntent);
         views.setEmptyView(R.id.widget_list_view, R.id.widget_empty_view);
 
-        // ... (Code cũ của bạn cho PendingIntent Template) ...
         Intent clickIntentTemplate = new Intent(context, LessonDetailActivity.class);
         clickIntentTemplate.setAction(Intent.ACTION_VIEW);
-        clickIntentTemplate.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent clickPendingIntentTemplate = PendingIntent.getActivity(
                 context,
                 0,

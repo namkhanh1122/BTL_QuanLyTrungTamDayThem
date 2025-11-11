@@ -14,18 +14,15 @@ public class Document extends BaseEntity {
 
     private String lessonId;
 
-    private String uploadedBy;
-
     public Document() {
 
     }
 
-    public Document(String title, String description, String url, String lessonId, String uploadedBy) {
+    public Document(String title, String description, String url, String lessonId) {
         this.title = title;
         this.description = description;
         this.url = url;
         this.lessonId = lessonId;
-        this.uploadedBy = uploadedBy;
     }
 
     public String getTitle() {
@@ -60,11 +57,4 @@ public class Document extends BaseEntity {
         this.lessonId = lessonId;
     }
 
-    public String getUploadedBy() {
-        return uploadedBy;
-    }
-
-    public void setUploadedBy(String uploadedBy) {
-        this.uploadedBy = uploadedBy;
-    }
 }

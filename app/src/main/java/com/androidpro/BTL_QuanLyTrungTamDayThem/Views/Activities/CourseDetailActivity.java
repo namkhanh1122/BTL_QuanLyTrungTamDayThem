@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -47,7 +48,9 @@ public class CourseDetailActivity extends BaseActivity {
 
         courseId = getIntent().getStringExtra("course_id");
         if (courseId == null || courseId.isEmpty()) {
-            viewModel.sendNotification("Lỗi: Không tìm thấy ID khoá học");
+            // viewModel is not initialized yet here (BaseActivity calls initUI before initViewModel)
+            // use a direct Toast to notify and finish early
+            Toast.makeText(this, "Lỗi: Không tìm thấy ID khoá học", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }

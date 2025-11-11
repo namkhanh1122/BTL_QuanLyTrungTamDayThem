@@ -7,6 +7,8 @@ import com.androidpro.BTL_QuanLyTrungTamDayThem.R;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.ViewModels.MainViewModel;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.databinding.ActivityMainBinding;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -35,17 +37,16 @@ public class MainActivity extends BaseActivity {
         NavigationUI.setupWithNavController(binding.navView, navController);
 
 
-        Bundle bundle = getIntent().getExtras();
-        if (bundle != null) {
-            username = bundle.getString("user");
-            email = bundle.getString("email");
-        }
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+
+        username = currentUser.getDisplayName();
+        email = currentUser.getEmail();
     }
 
     @Override
     public void initViewModel() {
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
-        viewModel.sendNotification("Xin chào " + username);
     }
 
     @Override
@@ -57,5 +58,6 @@ public class MainActivity extends BaseActivity {
     public void observeData() {
         super.observeData();
 
+        viewModel.sendNotification("Xin chào " + username);
     }
 }

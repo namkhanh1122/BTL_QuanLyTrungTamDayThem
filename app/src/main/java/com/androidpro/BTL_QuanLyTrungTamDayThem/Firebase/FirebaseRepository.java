@@ -498,7 +498,7 @@ public class FirebaseRepository {
         });
     }
 
-    public void deleteDocument(String documentId, DataCallback<Void> callback) {
+    public void deleteDocument(String documentId, DataCallback<Document> callback) {
         findDocumentRefById(documentId, new DataCallback<>() {
             @Override
             public void onSuccess(DocumentReference docRef) {
@@ -540,7 +540,7 @@ public class FirebaseRepository {
 
     public Task<QuerySnapshot> getFutureLessonsInCourse_Task(String courseId) {
         return getLessonsCol(courseId)
-                .whereGreaterThan("beginTime", new Date())
+                .whereGreaterThan("endTime", new Date())
                 .get();
     }
 }

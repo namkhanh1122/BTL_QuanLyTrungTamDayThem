@@ -23,6 +23,8 @@ public class HomeViewModel extends BaseViewModel {
         super(application);
     }
 
+    private final Map<String, List<Lesson>> allLessonsMap = new HashMap<>();
+
     public void loadLessonsRealtime() {
         String instructorId = FirebaseAuth.getInstance().getUid();
         if (instructorId == null) {
@@ -34,24 +36,43 @@ public class HomeViewModel extends BaseViewModel {
             @Override
             public void onSuccess(List<Course> courses) {
                 if (courses == null || courses.isEmpty()) {
+                    allLessonsMap.clear();
                     allLessons.postValue(new ArrayList<>());
                     return;
                 }
 
+                java.util.Set<String> activeCourseIds = new java.util.HashSet<>();
                 for (Course c : courses) {
-                    String courseId = c.getId();
+                    activeCourseIds.add(c.getId());
+                }
+
+                allLessonsMap.keySet().removeIf(courseId -> !activeCourseIds.contains(courseId));
+
+                for (String courseId : activeCourseIds) {
+
                     FirebaseRepository.getInstance().listenLessonsInCourse(courseId, new FirebaseRepository.DataCallback<>() {
                         @Override
-                        public void onSuccess(List<Lesson> data) {
-                            allLessons.postValue(data);
+                        public void onSuccess(List<Lesson> lessonData) {
+                            if (lessonData != null) {
+                                allLessonsMap.put(courseId, lessonData);
+                            } else {
+                                allLessonsMap.remove(courseId);
+                            }
+
+                            rebuildAndPostAllLessons();
                         }
 
                         @Override
                         public void onError(String error) {
+                            allLessonsMap.remove(courseId);
+                            rebuildAndPostAllLessons();
+
                             notifyMessage.postValue(error);
                         }
                     });
                 }
+
+                rebuildAndPostAllLessons();
             }
 
             @Override
@@ -59,5 +80,14 @@ public class HomeViewModel extends BaseViewModel {
                 notifyMessage.postValue(error);
             }
         });
+    }
+
+    private void rebuildAndPostAllLessons() {
+        List<Lesson> combinedList = new ArrayList<>();
+        for (List<Lesson> list : allLessonsMap.values()) {
+            combinedList.addAll(list);
+        }
+
+        allLessons.postValue(combinedList);
     }
 }

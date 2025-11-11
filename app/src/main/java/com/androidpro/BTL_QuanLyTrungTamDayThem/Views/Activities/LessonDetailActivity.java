@@ -1,6 +1,8 @@
 package com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Activities;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -8,7 +10,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Core.BaseActivity;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.ViewModels.LessonViewModel;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Adapters.AttendanceAdapter;
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Views.Activities.DocumentActivity;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.databinding.ActivityLessonDetailBinding;
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Firebase.FirebaseRepository;
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Course;
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Enums.ScheduleStatus;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -19,6 +25,7 @@ public class LessonDetailActivity extends BaseActivity {
     private String lessonId;;
 
     private AttendanceAdapter attendanceAdapter;
+    private boolean actionsAllowed = true;
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm dd/MM/yyyy", Locale.getDefault());
 
@@ -34,19 +41,28 @@ public class LessonDetailActivity extends BaseActivity {
         setContentView(binding.getRoot());
 
         lessonId = getIntent().getStringExtra("lesson_id");
-        if (lessonId == null || lessonId.isEmpty()) {
-            viewModel.sendNotification("Lỗi: Không tìm thấy ID buổi học");
-            finish();
-            return;
-        }
 
         attendanceAdapter = new AttendanceAdapter((attendance, isChecked) -> {
+            // prevent changes when course is completed/canceled
+            if (!actionsAllowed) {
+                if (viewModel != null) viewModel.sendNotification("Không thể sửa điểm danh: khoá học đã kết thúc hoặc bị hủy");
+                // refresh adapter to revert UI state
+                attendanceAdapter.notifyDataSetChanged();
+                return;
+            }
+
             // Update attendance present flag and persist
             attendance.setPresent(isChecked);
             if (viewModel instanceof LessonViewModel) {
                 ((LessonViewModel) viewModel).updateAttendance(attendance);
             }
         }, (attendance, score) -> {
+            if (!actionsAllowed) {
+                if (viewModel != null) viewModel.sendNotification("Không thể sửa điểm: khoá học đã kết thúc hoặc bị hủy");
+                attendanceAdapter.notifyDataSetChanged();
+                return;
+            }
+
             // Update attendance score and persist
             attendance.setScore(score);
             if (viewModel instanceof LessonViewModel) {
@@ -57,6 +73,14 @@ public class LessonDetailActivity extends BaseActivity {
         binding.rvStudentAttendance.setLayoutManager(new LinearLayoutManager(this));
         binding.rvStudentAttendance.setAdapter(attendanceAdapter);
 
+        // open document manager when tapping documents card (pass actions_allowed flag)
+        binding.cardDocuments.setOnClickListener(v -> {
+            Intent intent = new Intent(this, DocumentActivity.class);
+            intent.putExtra("lesson_id", lessonId);
+            intent.putExtra("lesson_title", binding.tvLessonTitle.getText().toString());
+            intent.putExtra("actions_allowed", actionsAllowed);
+            startActivity(intent);
+        });
     }
 
     @Override
@@ -67,6 +91,12 @@ public class LessonDetailActivity extends BaseActivity {
     @Override
     public void loadEvents() {
         binding.toolbar.setNavigationOnClickListener(v -> finish());
+
+        if (lessonId == null || lessonId.isEmpty()) {
+            viewModel.sendNotification("Lỗi: Không tìm thấy ID buổi học");
+            finish();
+            return;
+        }
 
         ((LessonViewModel)viewModel).loadLessonDetails(lessonId);
         // Load attendance records for this lesson
@@ -89,6 +119,14 @@ public class LessonDetailActivity extends BaseActivity {
                 if(lesson.getEndTime() != null) {
                     binding.tvEndTime.setText(dateFormat.format(lesson.getEndTime()));
                 }
+
+                if (lesson.getStatus() != null) {
+                    ScheduleStatus st = lesson.getStatus();
+                    actionsAllowed = st == ScheduleStatus.Active;
+                } else {
+                    actionsAllowed = true;
+                }
+                attendanceAdapter.setActionsAllowed(actionsAllowed);
             }
         });
 
