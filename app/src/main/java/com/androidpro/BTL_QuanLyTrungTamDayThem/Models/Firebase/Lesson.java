@@ -81,7 +81,25 @@ public class Lesson extends BaseEntity {
     }
 
     public ScheduleStatus getStatus() {
-        return status;
+        if (this.status == ScheduleStatus.Canceled) {
+            return ScheduleStatus.Canceled;
+        }
+
+        Date now = new Date();
+
+        if (getBeginTime() == null || getEndTime() == null) {
+            return ScheduleStatus.Planned;
+        }
+
+        if (now.after(getEndTime())) {
+            return ScheduleStatus.Completed;
+        }
+
+        if (now.after(getBeginTime())) {
+            return ScheduleStatus.Active;
+        }
+
+        return ScheduleStatus.Planned;
     }
 
     public void setStatus(ScheduleStatus status) {
@@ -92,19 +110,4 @@ public class Lesson extends BaseEntity {
 
     public void setCourseId(String courseId) {this.courseId = courseId;}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Lesson lesson = (Lesson) o;
-
-        return Objects.equals(getId(), lesson.getId()) &&
-                Objects.equals(title, lesson.title) &&
-                Objects.equals(content, lesson.content) &&
-                Objects.equals(videoUrl, lesson.videoUrl) &&
-                Objects.equals(beginTime, lesson.beginTime) &&
-                Objects.equals(endTime, lesson.endTime) &&
-                status == lesson.status;
-    }
 }

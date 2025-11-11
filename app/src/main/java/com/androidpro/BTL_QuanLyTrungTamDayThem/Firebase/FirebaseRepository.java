@@ -1,5 +1,6 @@
 package com.androidpro.BTL_QuanLyTrungTamDayThem.Firebase;
 
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Enums.ScheduleStatus;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Attendance;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Course;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Document;
@@ -216,7 +217,23 @@ public class FirebaseRepository {
                         return;
                     }
                     if (snapshot != null) {
-                        callback.onSuccess(snapshot.toObjects(Lesson.class));
+                        List<Lesson> lessons = snapshot.toObjects(Lesson.class);
+                        for(Lesson lesson : lessons)
+                        {
+                            final ScheduleStatus status = lesson.getStatus();
+                            updateLesson(lesson, new DataCallback<>() {
+                                @Override
+                                public void onSuccess(Lesson data) {
+
+                                }
+
+                                @Override
+                                public void onError(String error) {
+
+                                }
+                            });
+                        }
+                        callback.onSuccess(lessons);
                     }
                 });
     }

@@ -7,11 +7,15 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Core.BaseViewModel;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Firebase.FirebaseRepository;
+import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Enums.ScheduleStatus;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Attendance;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Lesson;
 import com.androidpro.BTL_QuanLyTrungTamDayThem.Models.Firebase.Student;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class LessonViewModel extends BaseViewModel {
     public MutableLiveData<Lesson> lessonDetail = new MutableLiveData<>();
@@ -84,32 +88,47 @@ public class LessonViewModel extends BaseViewModel {
 
     // Load attendance entries for a lesson
     public void loadAttendanceForLesson(String lessonId) {
-        FirebaseRepository.getInstance().listenAttendancesInLesson(lessonId, new FirebaseRepository.DataCallback<>() {
+        // 1. Lấy thông tin buổi học để tìm Course ID
+        FirebaseRepository.getInstance().getLesson(lessonId, new FirebaseRepository.DataCallback<>() {
             @Override
-            public void onSuccess(List<Attendance> data) {
-                if (data != null && !data.isEmpty()) {
-                    attendanceList.postValue(data);
-                } else {
-                    // No attendance records yet for this lesson -> create default attendance entries from students in the course
-                    FirebaseRepository.getInstance().getLesson(lessonId, new FirebaseRepository.DataCallback<>() {
-                        @Override
-                        public void onSuccess(Lesson lesson) {
-                            if (lesson == null || lesson.getCourseId() == null) {
-                                notifyMessage.postValue("Không tìm thấy thông tin khoá học để tạo danh sách điểm danh");
-                                return;
-                            }
+            public void onSuccess(Lesson lesson) {
+                if (lesson == null || lesson.getCourseId() == null) {
+                    notifyMessage.postValue("Không tìm thấy thông tin khoá học để tạo danh sách điểm danh");
+                    return;
+                }
 
-                            String courseId = lesson.getCourseId();
-                            FirebaseRepository.getInstance().listenStudentsInCourse(courseId, new FirebaseRepository.DataCallback<>() {
-                                @Override
-                                public void onSuccess(List<Student> students) {
-                                    if (students == null || students.isEmpty()) {
-                                        attendanceList.postValue(new java.util.ArrayList<>());
-                                        return;
+                String courseId = lesson.getCourseId();
+
+                FirebaseRepository.getInstance().listenStudentsInCourse(courseId, new FirebaseRepository.DataCallback<>() {
+                    @Override
+                    public void onSuccess(List<Student> allStudents) {
+                        if (allStudents == null || allStudents.isEmpty()) {
+                            attendanceList.postValue(new java.util.ArrayList<>());
+                            return;
+                        }
+
+                        FirebaseRepository.getInstance().listenAttendancesInLesson(lessonId, new FirebaseRepository.DataCallback<>() {
+                            @Override
+                            public void onSuccess(List<Attendance> existingAttendances) {
+
+                                Set<String> attendedStudentIds = new HashSet<>();
+                                if (existingAttendances != null) {
+                                    for (Attendance a : existingAttendances) {
+                                        attendedStudentIds.add(a.getStudentId());
                                     }
+                                }
 
-                                    java.util.List<Attendance> created = new java.util.ArrayList<>();
-                                    for (Student s : students) {
+                                List<Student> missingStudents = new ArrayList<>();
+                                for (Student s : allStudents) {
+                                    if (!attendedStudentIds.contains(s.getId())) {
+                                        missingStudents.add(s);
+                                    }
+                                }
+
+                                if (missingStudents.isEmpty()) {
+                                    attendanceList.postValue(existingAttendances);
+                                } else {
+                                    for (Student s : missingStudents) {
                                         Attendance a = new Attendance();
                                         a.setLessonId(lessonId);
                                         a.setStudentId(s.getId());
@@ -118,14 +137,10 @@ public class LessonViewModel extends BaseViewModel {
                                         a.setScore(0);
                                         a.setName(s.getName());
 
-                                        // addAttendance will set id on the same Attendance instance
+
                                         FirebaseRepository.getInstance().addAttendance(lessonId, a, new FirebaseRepository.DataCallback<>() {
                                             @Override
                                             public void onSuccess(Attendance data) {
-                                                created.add(data);
-                                                if (created.size() == students.size()) {
-                                                    attendanceList.postValue(created);
-                                                }
                                             }
 
                                             @Override
@@ -134,21 +149,25 @@ public class LessonViewModel extends BaseViewModel {
                                             }
                                         });
                                     }
-                                }
 
-                                @Override
-                                public void onError(String error) {
-                                    notifyMessage.postValue(error);
+                                    if (existingAttendances != null) {
+                                        attendanceList.postValue(existingAttendances);
+                                    }
                                 }
-                            });
-                        }
+                            }
 
-                        @Override
-                        public void onError(String error) {
-                            notifyMessage.postValue(error);
-                        }
-                    });
-                }
+                            @Override
+                            public void onError(String error) {
+                                notifyMessage.postValue(error);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        notifyMessage.postValue(error);
+                    }
+                });
             }
 
             @Override
