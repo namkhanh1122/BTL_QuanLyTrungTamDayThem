@@ -8,6 +8,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.content.Context;
 import android.widget.CheckBox;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -33,6 +34,11 @@ public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.VH
 
     private final OnAttendanceChangeListener attendanceListener;
     private final OnGradeChangeListener gradeListener;
+    private boolean actionsAllowed = true;
+    public void setActionsAllowed(boolean allowed) {
+        this.actionsAllowed = allowed;
+        notifyDataSetChanged();
+    }
 
     public AttendanceAdapter(OnAttendanceChangeListener attendanceListener, OnGradeChangeListener gradeListener) {
         this.attendanceListener = attendanceListener;
@@ -60,9 +66,10 @@ public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.VH
 
         h.tvStudentName.setText(item.getName());
 
-        h.checkboxAttendance.setOnCheckedChangeListener(null);
+        h.checkboxAttendance.setEnabled(this.actionsAllowed);
         h.checkboxAttendance.setChecked(item.isPresent());
 
+        h.etGrade.setEnabled(this.actionsAllowed);
         if (item.getScore() > 0) {
             h.etGrade.setText(String.valueOf(item.getScore()));
         } else {
@@ -86,6 +93,10 @@ public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.VH
                         parsed = Double.parseDouble(newGrade);
                     } catch (NumberFormatException e) {
                         parsed = 0;
+                    }
+                    if (parsed < 0 || parsed > 10) {
+                        h.etGrade.setError("Điểm trong khoảng 0 - 10");
+                        return false;
                     }
                     item.setScore(parsed);
                     gradeListener.onChange(item, parsed);

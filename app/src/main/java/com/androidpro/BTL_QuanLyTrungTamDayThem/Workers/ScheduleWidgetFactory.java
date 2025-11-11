@@ -65,8 +65,6 @@ public class ScheduleWidgetFactory implements RemoteViewsService.RemoteViewsFact
         List<Lesson> tempLessons = new ArrayList<>();
 
         try {
-            // Bước 1: Lấy các Course của giảng viên (ĐỒNG BỘ)
-            // Gọi hàm mới từ Repository và 'await' kết quả
             QuerySnapshot coursesSnapshot = Tasks.await(
                     repository.getCoursesForInstructor_Task(uid)
             );
@@ -77,37 +75,28 @@ public class ScheduleWidgetFactory implements RemoteViewsService.RemoteViewsFact
                 return;
             }
 
-            // Bước 2: Với MỖI Course, lấy sub-collection "Lessons" (ĐỒNG BỘ)
             for (DocumentSnapshot courseDoc : coursesSnapshot.getDocuments()) {
                 String courseId = courseDoc.getId();
                 Log.d("WidgetFactory", "Đang lấy lesson cho course: " + courseId);
 
-                // Gọi hàm mới từ Repository và 'await' kết quả
                 QuerySnapshot lessonsSnapshot = Tasks.await(
                         repository.getFutureLessonsInCourse_Task(courseId)
                 );
 
                 if (!lessonsSnapshot.isEmpty()) {
-                    // Thêm tất cả lesson tìm thấy vào danh sách tạm
                     tempLessons.addAll(lessonsSnapshot.toObjects(Lesson.class));
                 }
             }
 
-            // Bước 3: Sắp xếp TẤT CẢ lesson đã tìm thấy
             tempLessons.sort(Comparator.comparing(Lesson::getBeginTime));
 
-            // Bước 4: Gán vào danh sách chính
             lessonsList.clear();
             lessonsList.addAll(tempLessons);
             Log.d("WidgetFactory", "Tải thành công qua Repository: " + lessonsList.size() + " buổi học.");
 
         } catch (ExecutionException | InterruptedException e) {
             Log.e("WidgetFactory", "Lỗi tải dữ liệu đồng bộ: " + e.getMessage());
-            if (e.getCause() != null && e.getCause().getMessage().contains("INDEX_NOT_FOUND")) {
-                Log.e("WidgetFactory", "LỖI NGHIÊM TRỌNG: BẠN CẦN TẠO INDEX TRONG FIRESTORE.");
-                Log.e("WidgetFactory", "Vui lòng kiểm tra Logcat để lấy link tạo index tự động.");
-            }
-            Thread.currentThread().interrupt(); // Phục hồi trạng thái interrupt
+            Thread.currentThread().interrupt();
             lessonsList.clear();
         }
     }
@@ -180,23 +169,11 @@ public class ScheduleWidgetFactory implements RemoteViewsService.RemoteViewsFact
         views.setTextColor(R.id.widget_item_status, textColor);
 
         views.setInt(R.id.widget_item_status, "setBackgroundResource", bgResId);
-        Bundle extras = new Bundle();
-        extras.putString("lesson_id", lesson.getId());
-
-        // Giả sử Lesson model của bạn có trường courseId (giống trong hàm addLesson)
-        // Gửi kèm courseId sẽ giúp Activity chi tiết tìm kiếm nhanh hơn
-        if (lesson.getCourseId() != null) {
-            extras.putString("course_id", lesson.getCourseId());
-        }
 
         Intent fillInIntent = new Intent();
-        fillInIntent.putExtras(extras);
+        fillInIntent.putExtra("lesson_id", lesson.getId());
 
-        // Chỗ này tôi thấy layout của bạn có vẻ không có R.id.widget_item_root
-        // Tôi sửa lại thành 2 cái click giống file gốc của bạn
-        // Nếu bạn có 1 layout gốc (root view) cho item, hãy dùng R.id.widget_item_root
-        views.setOnClickFillInIntent(R.id.widget_item_title, fillInIntent); // Click vào title
-        views.setOnClickFillInIntent(R.id.widget_item_time, fillInIntent); // Click vào time
+        views.setOnClickFillInIntent(R.id.widget_item_root, fillInIntent);
 
         return views;
     }

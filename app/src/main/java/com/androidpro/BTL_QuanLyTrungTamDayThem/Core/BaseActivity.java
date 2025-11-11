@@ -12,8 +12,8 @@ public abstract class BaseActivity extends AppCompatActivity implements ViewInit
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        initUI();
         initViewModel();
+        initUI();
         loadEvents();
         observeData();
     }

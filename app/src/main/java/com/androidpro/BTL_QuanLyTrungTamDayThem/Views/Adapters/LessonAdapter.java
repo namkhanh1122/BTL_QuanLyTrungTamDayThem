@@ -59,13 +59,14 @@ public class LessonAdapter extends RecyclerView.Adapter<LessonAdapter.VH> {
         h.tvLessonTitle.setText(l.getTitle());
 
         Date beginTime = l.getBeginTime();
+        Date endTime = l.getEndTime();
 
         if (beginTime != null) {
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm dd-MM-yyyy", Locale.getDefault());
-            h.tvLessonTime.setText(timeFormat.format(beginTime));
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+            h.tvLessonTime.setText(timeFormat.format(beginTime) + "-" + timeFormat.format(endTime));
 
             Locale vietnameseLocale = new Locale("vi", "VN");
-            SimpleDateFormat dayFormat = new SimpleDateFormat("EEEE", vietnameseLocale);
+            SimpleDateFormat dayFormat = new SimpleDateFormat("EEEE dd-MM-yyyy", vietnameseLocale);
 
             String dayOfWeek = dayFormat.format(beginTime);
 
